@@ -1,0 +1,3 @@
+[submodule "main/depthai-spi-library"] 
+  path = main/depthai-spi-library
+  url = https://github.com/luxonis/depthai-spi-library.git
