@@ -1,3 +1,7 @@
+Note that this repo has a submodule:
+git submodule init
+git submodule update
+
 ESP32 app build & flash with esp-idf:
 idf.py build
 idf.py -p /dev/ttyUSB1 flash
