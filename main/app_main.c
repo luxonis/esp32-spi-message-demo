@@ -232,7 +232,7 @@ uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiPr
             success = 1;
             
         }else if(recvbuf[0] != 0x00){
-            printf("asdfasdf *************************************** got a half/non aa packet ************************************************\n");
+            printf("*************************************** got a half/non aa packet ************************************************\n");
             success = 0;
         }
     } else {
@@ -265,7 +265,7 @@ uint8_t spi_get_streams(SpiGetStreamsResp *response, SpiProtocolInstance* spiPro
             success = 1;
             
         }else if(recvbuf[0] != 0x00){
-            printf("asdfasdf *************************************** got a half/non aa packet ************************************************\n");
+            printf("*************************************** got a half/non aa packet ************************************************\n");
             success = 0;
         }
     } else {
@@ -293,7 +293,6 @@ void app_main()
     SpiProtocolInstance* spiProtoInstance = malloc(sizeof(SpiProtocolInstance));
     SpiProtocolPacket* spiSendPacket = malloc(sizeof(SpiProtocolPacket));
 
-    static char recvbuf[BUFF_MAX_SIZE] = {0};
     spi_transaction_t spi_trans;
     memset(&spi_trans, 0, sizeof(spi_trans));
 
@@ -313,7 +312,7 @@ void app_main()
         .command_bits=0,
         .address_bits=0,
         .dummy_bits=0,
-        .clock_speed_hz=4000000, // TODO
+        .clock_speed_hz=4000000, // TODO Tried 5 MHz and it became unstable?
         .duty_cycle_pos=128,        //50% duty cycle
         .mode=0,
         .spics_io_num=GPIO_CS,
