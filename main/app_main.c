@@ -142,9 +142,9 @@ uint8_t spi_get_size(SpiGetSizeResp *response, char * stream_name, SpiProtocolIn
 }
 
 
+
 uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_t size, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket, spi_transaction_t spi_trans, spi_device_handle_t handle){
     uint8_t success = 0;
-int debug_skip = 0;
     spi_send_command(spiSendPacket, GET_MESSAGE, strlen(stream_name)+1, stream_name);
     spi_trans.length=SPI_PKT_SIZE*8;
     spi_trans.tx_buffer=spiSendPacket;
@@ -153,6 +153,7 @@ int debug_skip = 0;
     spi_device_transmit(handle, &spi_trans);
 
     uint32_t total_recv = 0;
+    int debug_skip = 0;
     while(total_recv < size){
         if(xSemaphoreTake(rdySem, ( TickType_t ) 500) == pdPASS){
 
@@ -166,15 +167,11 @@ debug_skip++;
             spi_trans.tx_buffer=emptyPacket;
             spi_device_transmit(handle, &spi_trans);
 
-//    for(int i = 0; i<BUFF_MAX_SIZE; i++){
-//        printf("%02x", recvbuf[i]);
-//    }
-//    printf("\n");
-
                 if(recvbuf[0]==0xaa){
                     SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
                     uint32_t remaining_data = size-total_recv;
                     if ( remaining_data < PAYLOAD_MAX_SIZE ){
+
                         memcpy(response->data+total_recv, spiRecvPacket->data, remaining_data);
                         total_recv += remaining_data;
                     } else {
@@ -363,15 +360,15 @@ void app_main()
     xSemaphoreTake(rdySem, ( TickType_t ) 50);
 
     // example of grabbing the available streams. they'll be the same as what's defined in the nodes.
-    SpiGetStreamsResp p_get_streams_resp;
-    req_success = spi_get_streams(&p_get_streams_resp, spiProtoInstance, spiSendPacket, spi_trans, handle);
-    printf("Available Streams: \n");
-    for(int i=0; i<p_get_streams_resp.numStreams; i++){
-        printf("%s\n", p_get_streams_resp.stream_names[i]);
-    }
+//    SpiGetStreamsResp p_get_streams_resp;
+//    req_success = spi_get_streams(&p_get_streams_resp, spiProtoInstance, spiSendPacket, spi_trans, handle);
+//    printf("Available Streams: \n");
+//    for(int i=0; i<p_get_streams_resp.numStreams; i++){
+//        printf("%s\n", p_get_streams_resp.stream_names[i]);
+//    }
 
     while(1) {
-//usleep(50000);
+//usleep(10000);
         // do a get_size before trying to retreive message.
         SpiGetSizeResp p_get_size_resp;
         req_success = spi_get_size(&p_get_size_resp, "spimetaout", spiProtoInstance, spiSendPacket, spi_trans, handle);
@@ -381,11 +378,16 @@ void app_main()
         if(req_success){
             SpiGetMessageResp p_get_message_resp;
             p_get_message_resp.data = malloc(p_get_size_resp.size);
+
+            if(!p_get_message_resp.data){
+                printf("total free %d\n", esp_get_free_heap_size());
+                printf("heap_caps_get_largest_free_block: %d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+                printf("Failed to allocate memory for response of size %d.\n", p_get_size_resp.size);
+                assert(0);
+            }
             req_success = spi_get_message(&p_get_message_resp, "spimetaout", p_get_size_resp.size, spiProtoInstance, spiSendPacket, spi_trans, handle);
-
-            
-
             free(p_get_message_resp.data);
+
             if(req_success){
                 SpiPopMessagesResp p_pop_messages_resp;
                 req_success = spi_pop_messages(&p_pop_messages_resp, "spimetaout", spiProtoInstance, spiSendPacket, spi_trans, handle);
