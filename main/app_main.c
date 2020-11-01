@@ -16,7 +16,7 @@
 #include "spi_messaging.h"
 #include "spi_protocol.h"
 
-#include "spi_callbacks.h"
+#include "esp32_spi_impl.h"
 
 
 //---------------------------------------------------------------------

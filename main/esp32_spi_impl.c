@@ -1,4 +1,4 @@
-#include <spi_callbacks.h>
+#include <esp32_spi_impl.h>
 
 /*
 SPI sender (master) example.
