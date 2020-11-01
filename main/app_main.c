@@ -19,7 +19,20 @@
 #include "spi_callbacks.h"
 
 
+//---------------------------------------------------------------------
+// For other MCU implementations send and receive methods and assign them to the function pointer here. 
+//---------------------------------------------------------------------
+uint8_t (*send_spi_ptr)(SpiProtocolPacket* spiSendPacket) = &esp32_send_spi;
+uint8_t (*recv_spi_ptr)(char* recvbuf) = &esp32_recv_spi;
 
+uint8_t generic_send_spi(SpiProtocolPacket* spiSendPacket){
+    return (*send_spi_ptr)(spiSendPacket); 
+}
+
+uint8_t generic_recv_spi(char* recvbuf){
+    return (*recv_spi_ptr)(recvbuf);
+}
+//---------------------------------------------------------------------
 
 
 void debugPrintPacket(char * packet){
@@ -34,11 +47,11 @@ uint8_t spi_get_size(SpiGetSizeResp *response, char * stream_name, SpiProtocolIn
     uint8_t success = 0;
     printf("sending GET_SIZE cmd.\n");
     spi_generate_command(spiSendPacket, GET_SIZE, strlen(stream_name)+1, stream_name);
-    esp32_send_spi(spiSendPacket);
+    generic_send_spi(spiSendPacket);
 
     printf("receive GET_SIZE response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
-    uint8_t recv_success = esp32_recv_spi(recvbuf);
+    uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
         if(recvbuf[0]==0xaa){
@@ -63,7 +76,7 @@ uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_
     uint8_t success = 0;
     printf("sending GET_MESSAGE cmd.\n");
     spi_generate_command(spiSendPacket, GET_MESSAGE, strlen(stream_name)+1, stream_name);
-    esp32_send_spi(spiSendPacket);
+    generic_send_spi(spiSendPacket);
 
     uint32_t total_recv = 0;
     int debug_skip = 0;
@@ -74,7 +87,7 @@ uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_
         debug_skip++;
 
         char recvbuf[BUFF_MAX_SIZE] = {0};
-        uint8_t recv_success = esp32_recv_spi(recvbuf);
+        uint8_t recv_success = generic_recv_spi(recvbuf);
         if(recv_success){
             if(recvbuf[0]==0xaa){
                 SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
@@ -124,11 +137,11 @@ uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiPr
 
     printf("sending POP_MESSAGES cmd.\n");
     spi_generate_command(spiSendPacket, POP_MESSAGES, strlen(stream_name)+1, stream_name);
-    esp32_send_spi(spiSendPacket);
+    generic_send_spi(spiSendPacket);
 
     printf("receive POP_MESSAGES response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
-    uint8_t recv_success = esp32_recv_spi(recvbuf);
+    uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
         if(recvbuf[0]==0xaa){
@@ -153,11 +166,11 @@ uint8_t spi_get_streams(SpiGetStreamsResp *response, SpiProtocolInstance* spiPro
     uint8_t success = 0;
     printf("sending GET_STREAMS cmd.\n");
     spi_generate_command(spiSendPacket, GET_STREAMS, 1, "");
-    esp32_send_spi(spiSendPacket);
+    generic_send_spi(spiSendPacket);
 
     printf("receive GET_STREAMS response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
-    uint8_t recv_success = esp32_recv_spi(recvbuf);
+    uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
         if(recvbuf[0]==0xaa){

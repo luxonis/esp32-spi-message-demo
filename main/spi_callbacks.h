@@ -58,7 +58,7 @@ Pins in use. The SPI Master can use the GPIO mux, so feel free to change these i
 
 void init_esp32_spi();
 void deinit_esp32_spi();
-void esp32_send_spi(SpiProtocolPacket* spiSendPacket);
+uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket);
 uint8_t esp32_recv_spi(char* recvbuf);
 
 #ifdef __cplusplus

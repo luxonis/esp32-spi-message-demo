@@ -103,25 +103,36 @@ void deinit_esp32_spi(){
     assert(ret==ESP_OK);
 }
 
-void esp32_send_spi(SpiProtocolPacket* spiSendPacket){
+uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
+    uint8_t status = 0;
     spi_trans.length=SPI_PKT_SIZE*8;
     spi_trans.tx_buffer=spiSendPacket;
-    spi_device_transmit(handle, &spi_trans);
+    esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
+    if(trans_result == ESP_OK){
+        status = 1;
+    } else {
+        status = 0;
+    }
+    return status;
 }
 
 uint8_t esp32_recv_spi(char* recvbuf){
-    uint8_t success = 0;
+    uint8_t status = 0;
     if(xSemaphoreTake(rdySem, ( TickType_t ) 500) == pdPASS){
         spi_trans.rx_buffer=recvbuf;
         spi_trans.tx_buffer=emptyPacket;
-        spi_device_transmit(handle, &spi_trans);
-        success = 1;
+        esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
+        if(trans_result == ESP_OK){
+            status = 1;
+        } else {
+            status = 0;
+        }
     } else {
         printf("Timeout: no response from remote device...\n");
-        success = 0;
+        status = 0;
     }
 
-    return success;
+    return status;
 }
 
 
