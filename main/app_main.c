@@ -11,16 +11,24 @@
 #include <stddef.h>
 #include <string.h>
 
-
-
 #include "spi_messaging.h"
 #include "spi_protocol.h"
 
+#include "decode_mobilenet.h"
 #include "esp32_spi_impl.h"
+
+#define DEBUG_CMD 0
+#define debug_cmd_print(...) \
+    do { if (DEBUG_CMD) fprintf(stderr, __VA_ARGS__); } while (0)
+
+#define DEBUG_MESSAGE_CONTENTS 0
+
+#define MAX_DETECTIONS 16
 
 
 //---------------------------------------------------------------------
-// For other MCU implementations send and receive methods and assign them to the function pointer here. 
+// You can create your own send and recv methods for different MCU and assign them to the function pointer here. 
+// In theory that's all that's needed when switching to a different MCU. We'll see in practice.
 //---------------------------------------------------------------------
 uint8_t (*send_spi_ptr)(SpiProtocolPacket* spiSendPacket) = &esp32_send_spi;
 uint8_t (*recv_spi_ptr)(char* recvbuf) = &esp32_recv_spi;
@@ -34,27 +42,40 @@ uint8_t generic_recv_spi(char* recvbuf){
 }
 //---------------------------------------------------------------------
 
-
-void debugPrintPacket(char * packet){
-    for (int i = 0; i < 256; i++)
-    {
-        printf("%02X", packet[i]);
+void debug_print_hex(uint8_t * data, int len){
+    for(int i=0; i<len; i++){
+        if(i%80==0){
+            printf("\n");
+        }
+        printf("%02x", data[i]);
     }
-    printf("\n\n");
+    printf("\n");
 }
+
+void debug_print_char(char * data, int len){
+    for(int i=0; i<len; i++){
+        printf("%c", data[i]);
+    }
+    printf("\n");
+}
+
+
+
+
+
 
 uint8_t spi_get_size(SpiGetSizeResp *response, char * stream_name, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
     uint8_t success = 0;
-    printf("sending GET_SIZE cmd.\n");
+    debug_cmd_print("sending GET_SIZE cmd.\n");
     spi_generate_command(spiSendPacket, GET_SIZE, strlen(stream_name)+1, stream_name);
     generic_send_spi(spiSendPacket);
 
-    printf("receive GET_SIZE response from remote device...\n");
+    debug_cmd_print("receive GET_SIZE response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
     uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
-        if(recvbuf[0]==0xaa){
+        if(recvbuf[0]==START_BYTE_MAGIC){
             SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
             spi_parse_get_size_resp(response, spiRecvPacket->data);
             success = 1;
@@ -64,7 +85,7 @@ uint8_t spi_get_size(SpiGetSizeResp *response, char * stream_name, SpiProtocolIn
             success = 0;
         }
     } else {
-        printf("*************************************** failed to recv packet ************************************************\n");
+        printf("failed to recv packet\n");
         success = 0;
     }
 
@@ -74,7 +95,7 @@ uint8_t spi_get_size(SpiGetSizeResp *response, char * stream_name, SpiProtocolIn
 
 uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_t size, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
     uint8_t success = 0;
-    printf("sending GET_MESSAGE cmd.\n");
+    debug_cmd_print("sending GET_MESSAGE cmd.\n");
     spi_generate_command(spiSendPacket, GET_MESSAGE, strlen(stream_name)+1, stream_name);
     generic_send_spi(spiSendPacket);
 
@@ -82,14 +103,14 @@ uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_
     int debug_skip = 0;
     while(total_recv < size){
         if(debug_skip%20 == 0){
-            printf("receive GET_MESSAGE response from remote device... %d/%d\n", total_recv, size);
+            debug_cmd_print("receive GET_MESSAGE response from remote device... %d/%d\n", total_recv, size);
         }
         debug_skip++;
 
         char recvbuf[BUFF_MAX_SIZE] = {0};
         uint8_t recv_success = generic_recv_spi(recvbuf);
         if(recv_success){
-            if(recvbuf[0]==0xaa){
+            if(recvbuf[0]==START_BYTE_MAGIC){
                 SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
                 uint32_t remaining_data = size-total_recv;
                 if ( remaining_data < PAYLOAD_MAX_SIZE ){
@@ -105,25 +126,20 @@ uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_
                 break;
             }
         } else {
-            printf("*************************************** failed to recv packet ************************************************\n");
+            printf("failed to recv packet\n");
             break;
         }
     }
 
-
-/*
-printf("asdfasdf %d %d\n", total_recv, size);
-for (int i=0; i<total_recv; i++){
-    if(i%80==0){
-        printf("\n");
-    }
-    printf("%02x", response->data[i]);
-}
-printf("\n");
-*/
-
     if(total_recv==size){
         spi_parse_get_message(response, response->data, size);
+
+        if(DEBUG_MESSAGE_CONTENTS){
+            printf("metadata_size: %d metadata_type: %d data_size: %d\n", response->metadata_size, response->metadata_type, response->data_size);
+            debug_print_char((char*)response->metadata, response->metadata_size);
+            debug_print_hex((uint8_t*)response->data, response->data_size);
+        }
+
         success = 1;
     } else {
         success = 0;
@@ -135,16 +151,16 @@ printf("\n");
 uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
     uint8_t success = 0;
 
-    printf("sending POP_MESSAGES cmd.\n");
+    debug_cmd_print("sending POP_MESSAGES cmd.\n");
     spi_generate_command(spiSendPacket, POP_MESSAGES, strlen(stream_name)+1, stream_name);
     generic_send_spi(spiSendPacket);
 
-    printf("receive POP_MESSAGES response from remote device...\n");
+    debug_cmd_print("receive POP_MESSAGES response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
     uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
-        if(recvbuf[0]==0xaa){
+        if(recvbuf[0]==START_BYTE_MAGIC){
             SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
             spi_parse_pop_messages_resp(response, spiRecvPacket->data);
             success = 1;
@@ -154,7 +170,7 @@ uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiPr
             success = 0;
         }
     } else {
-        printf("*************************************** failed to recv packet ************************************************\n");
+        printf("failed to recv packet\n");
         success = 0;
     }
 
@@ -164,16 +180,16 @@ uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiPr
 
 uint8_t spi_get_streams(SpiGetStreamsResp *response, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
     uint8_t success = 0;
-    printf("sending GET_STREAMS cmd.\n");
+    debug_cmd_print("sending GET_STREAMS cmd.\n");
     spi_generate_command(spiSendPacket, GET_STREAMS, 1, "");
     generic_send_spi(spiSendPacket);
 
-    printf("receive GET_STREAMS response from remote device...\n");
+    debug_cmd_print("receive GET_STREAMS response from remote device...\n");
     char recvbuf[BUFF_MAX_SIZE] = {0};
     uint8_t recv_success = generic_recv_spi(recvbuf);
 
     if(recv_success){
-        if(recvbuf[0]==0xaa){
+        if(recvbuf[0]==START_BYTE_MAGIC){
             SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
             spi_parse_get_streams_resp(response, spiRecvPacket->data);
             success = 1;
@@ -183,7 +199,7 @@ uint8_t spi_get_streams(SpiGetStreamsResp *response, SpiProtocolInstance* spiPro
             success = 0;
         }
     } else {
-        printf("*************************************** failed to recv packet ************************************************\n");
+        printf("failed to recv packet\n");
         success = 0;
     }
 
@@ -195,76 +211,12 @@ void app_main()
 {
     uint8_t req_success = 0;
 
-//--------------------------------------------------
-// ------------------------------------------------
-// testing spi_protocol.
-// ------------------------------------------------
-
+    //TODO: move these into spi messaging?
     SpiProtocolInstance* spiProtoInstance = malloc(sizeof(SpiProtocolInstance));
     SpiProtocolPacket* spiSendPacket = malloc(sizeof(SpiProtocolPacket));
 
-//--------------------------------------------------
-
     // init spi for the esp32
     init_esp32_spi();
-
-/*
-    spi_device_handle_t handle;
-
-    spi_transaction_t spi_trans;
-    memset(&spi_trans, 0, sizeof(spi_trans));
-
-    //Configuration for the SPI bus
-    spi_bus_config_t buscfg={
-        .mosi_io_num=GPIO_MOSI,
-        .miso_io_num=GPIO_MISO,
-        .sclk_io_num=GPIO_SCLK,
-        .quadwp_io_num=-1,
-        .quadhd_io_num=-1
-    };
-
-    //Configuration for the SPI device on the other side of the bus
-    spi_device_interface_config_t devcfg={
-        .command_bits=0,
-        .address_bits=0,
-        .dummy_bits=0,
-        .clock_speed_hz=4000000, // TODO Tried 5 MHz and it became unstable?
-        .duty_cycle_pos=128,        //50% duty cycle
-        .mode=0,
-        .spics_io_num=GPIO_CS,
-        .cs_ena_posttrans=3,        //Keep the CS low 3 cycles after transaction, to stop slave from missing the last bit when CS has less propagation delay than CLK
-        .queue_size=3
-    };
-
-    //GPIO config for the handshake line.
-    gpio_config_t io_conf={
-        .intr_type=GPIO_PIN_INTR_NEGEDGE,
-        .mode=GPIO_MODE_INPUT,
-        .pull_up_en=1,
-        .pin_bit_mask=(1<<GPIO_HANDSHAKE)
-    };
-
-    //Create the semaphore.
-    rdySem=xSemaphoreCreateBinary();
-
-    //Set up handshake line interrupt.
-    gpio_config(&io_conf);
-    gpio_install_isr_service(0);
-    gpio_set_intr_type(GPIO_HANDSHAKE, GPIO_PIN_INTR_NEGEDGE);
-    gpio_isr_handler_add(GPIO_HANDSHAKE, gpio_handshake_isr_handler, NULL);
-
-    //Initialize the SPI bus and add the device we want to send stuff to.
-    ret=spi_bus_initialize(HSPI_HOST, &buscfg, 1);
-    assert(ret==ESP_OK);
-    ret=spi_bus_add_device(HSPI_HOST, &devcfg, &handle);
-    assert(ret==ESP_OK);
-
-    //Assume the slave is ready for the first transmission: if the slave started up before us, we will not detect 
-    //positive edge on the handshake line.
-    xSemaphoreGive(rdySem);
-*/
-
-
 
     // init spi protocol
     spi_protocol_init(spiProtoInstance);
@@ -278,25 +230,45 @@ void app_main()
     }
 
     while(1) {
-//usleep(1000000);
         // do a get_size before trying to retreive message.
         SpiGetSizeResp p_get_size_resp;
         req_success = spi_get_size(&p_get_size_resp, "spimetaout", spiProtoInstance, spiSendPacket);
-        printf("response: %d\n", p_get_size_resp.size);
+        debug_cmd_print("response: %d\n", p_get_size_resp.size);
 
         // get message (assuming we got size)
         if(req_success){
             SpiGetMessageResp p_get_message_resp;
             p_get_message_resp.data = malloc(p_get_size_resp.size);
-            req_success = spi_get_message(&p_get_message_resp, "spimetaout", p_get_size_resp.size, spiProtoInstance, spiSendPacket);
-
             if(!p_get_message_resp.data){
                 printf("total free %d\n", esp_get_free_heap_size());
                 printf("heap_caps_get_largest_free_block: %d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
                 printf("Failed to allocate memory for response of size %d.\n", p_get_size_resp.size);
                 assert(0);
             }
+
+
             req_success = spi_get_message(&p_get_message_resp, "spimetaout", p_get_size_resp.size, spiProtoInstance, spiSendPacket);
+
+            // ----------------------------------------
+            // example of decoding mobilenet
+            // ----------------------------------------
+            Detection dets[MAX_DETECTIONS];
+
+            int num_found = decode_mobilenet(dets, (half *)p_get_message_resp.data, 0.5f, MAX_DETECTIONS);
+            printf("num_found %d \n", num_found);
+
+            if(num_found > 0){
+                for(int i=0; i<num_found; i++){
+                    printf("LABEL:%f X(%.3f %.3f), Y(%.3f %.3f) CONFIDENCE: %.3f\n",
+                            dets[i].label,
+                            dets[i].x_min, dets[i].x_max,
+                            dets[i].y_min, dets[i].y_max, dets[i].confidence);
+                }
+            }else{
+                printf("none found\n");
+            }
+            // ----------------------------------------
+
             free(p_get_message_resp.data);
 
             if(req_success){

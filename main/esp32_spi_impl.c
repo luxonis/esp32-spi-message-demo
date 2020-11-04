@@ -12,6 +12,7 @@ ready to receive/send data. This code connects this line to a GPIO interrupt whi
 task waits for this semaphore to be given before queueing a transmission.
 */
 
+#define RECV_TIMEOUT_TICKS 250
 
 static xQueueHandle rdySem;
 static spi_transaction_t spi_trans;
@@ -118,7 +119,7 @@ uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
 
 uint8_t esp32_recv_spi(char* recvbuf){
     uint8_t status = 0;
-    if(xSemaphoreTake(rdySem, ( TickType_t ) 500) == pdPASS){
+    if(xSemaphoreTake(rdySem, ( TickType_t ) RECV_TIMEOUT_TICKS) == pdPASS){
         spi_trans.rx_buffer=recvbuf;
         spi_trans.tx_buffer=emptyPacket;
         esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
