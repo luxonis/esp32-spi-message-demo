@@ -22,7 +22,6 @@
     do { if (DEBUG_CMD) fprintf(stderr, __VA_ARGS__); } while (0)
 
 #define DEBUG_MESSAGE_CONTENTS 0
-
 #define MAX_DETECTIONS 16
 
 
@@ -58,8 +57,6 @@ void debug_print_char(char * data, int len){
     }
     printf("\n");
 }
-
-
 
 
 
@@ -148,11 +145,11 @@ uint8_t spi_get_message(SpiGetMessageResp *response, char * stream_name, uint32_
     return success;
 }
 
-uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
+uint8_t spi_pop_messages(SpiStatusResp *response, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
     uint8_t success = 0;
 
     debug_cmd_print("sending POP_MESSAGES cmd.\n");
-    spi_generate_command(spiSendPacket, POP_MESSAGES, strlen(stream_name)+1, stream_name);
+    spi_generate_command(spiSendPacket, POP_MESSAGES, strlen("NA")+1, "NA");
     generic_send_spi(spiSendPacket);
 
     debug_cmd_print("receive POP_MESSAGES response from remote device...\n");
@@ -162,7 +159,7 @@ uint8_t spi_pop_messages(SpiPopMessagesResp *response, char * stream_name, SpiPr
     if(recv_success){
         if(recvbuf[0]==START_BYTE_MAGIC){
             SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
-            spi_parse_pop_messages_resp(response, spiRecvPacket->data);
+            spi_status_resp(response, spiRecvPacket->data);
             success = 1;
             
         }else if(recvbuf[0] != 0x00){
@@ -202,6 +199,36 @@ uint8_t spi_get_streams(SpiGetStreamsResp *response, SpiProtocolInstance* spiPro
         printf("failed to recv packet\n");
         success = 0;
     }
+
+    return success;
+}
+
+uint8_t spi_pop_message(SpiStatusResp *response, char * stream_name, SpiProtocolInstance* spiProtoInstance, SpiProtocolPacket* spiSendPacket){
+    uint8_t success = 0;
+
+    debug_cmd_print("sending POP_MESSAGE cmd.\n");
+    spi_generate_command(spiSendPacket, POP_MESSAGE, strlen(stream_name)+1, stream_name);
+    generic_send_spi(spiSendPacket);
+
+    debug_cmd_print("receive POP_MESSAGE response from remote device...\n");
+    char recvbuf[BUFF_MAX_SIZE] = {0};
+    uint8_t recv_success = generic_recv_spi(recvbuf);
+
+    if(recv_success){
+        if(recvbuf[0]==START_BYTE_MAGIC){
+            SpiProtocolPacket* spiRecvPacket = spi_protocol_parse(spiProtoInstance, (uint8_t*)recvbuf, sizeof(recvbuf));
+            spi_status_resp(response, spiRecvPacket->data);
+            success = 1;
+            
+        }else if(recvbuf[0] != 0x00){
+            printf("*************************************** got a half/non aa packet ************************************************\n");
+            success = 0;
+        }
+    } else {
+        printf("failed to recv packet\n");
+        success = 0;
+    }
+
 
     return success;
 }
@@ -252,28 +279,33 @@ void app_main()
             // ----------------------------------------
             // example of decoding mobilenet
             // ----------------------------------------
-            Detection dets[MAX_DETECTIONS];
+            if(req_success){
+                Detection dets[MAX_DETECTIONS];
 
-            int num_found = decode_mobilenet(dets, (half *)p_get_message_resp.data, 0.5f, MAX_DETECTIONS);
-            printf("num_found %d \n", num_found);
+                int num_found = decode_mobilenet(dets, (half *)p_get_message_resp.data, 0.5f, MAX_DETECTIONS);
+                printf("num_found %d \n", num_found);
 
-            if(num_found > 0){
-                for(int i=0; i<num_found; i++){
-                    printf("LABEL:%f X(%.3f %.3f), Y(%.3f %.3f) CONFIDENCE: %.3f\n",
-                            dets[i].label,
-                            dets[i].x_min, dets[i].x_max,
-                            dets[i].y_min, dets[i].y_max, dets[i].confidence);
+                if(num_found > 0){
+                    for(int i=0; i<num_found; i++){
+                        printf("LABEL:%f X(%.3f %.3f), Y(%.3f %.3f) CONFIDENCE: %.3f\n",
+                                dets[i].label,
+                                dets[i].x_min, dets[i].x_max,
+                                dets[i].y_min, dets[i].y_max, dets[i].confidence);
+                    }
+                }else{
+                    printf("none found\n");
                 }
-            }else{
-                printf("none found\n");
             }
+
             // ----------------------------------------
 
             free(p_get_message_resp.data);
 
             if(req_success){
-                SpiPopMessagesResp p_pop_messages_resp;
-                req_success = spi_pop_messages(&p_pop_messages_resp, "spimetaout", spiProtoInstance, spiSendPacket);
+                SpiStatusResp p_status_resp;
+//                req_success = spi_pop_messages(&p_status_resp, spiProtoInstance, spiSendPacket);
+                req_success = spi_pop_message(&p_status_resp, "spimetaout", spiProtoInstance, spiSendPacket);
+
             }
         }
     }
