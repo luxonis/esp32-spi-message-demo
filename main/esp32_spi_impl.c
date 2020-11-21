@@ -71,7 +71,7 @@ void init_esp32_spi(){
     };
 
     // prep spi transaction
-    memset(&spi_trans, 0, sizeof(spi_trans));
+    
 
     //Create the semaphore.
     rdySem=xSemaphoreCreateBinary();
@@ -106,8 +106,13 @@ void deinit_esp32_spi(){
 
 uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
     uint8_t status = 0;
+    char discard_recvbuf[BUFF_MAX_SIZE] = {0};
+
+    memset(&spi_trans, 0, sizeof(spi_trans));
     spi_trans.length=SPI_PKT_SIZE*8;
+    spi_trans.rx_buffer=discard_recvbuf;
     spi_trans.tx_buffer=spiSendPacket;
+
     esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
     if(trans_result == ESP_OK){
         status = 1;
@@ -120,6 +125,8 @@ uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
 uint8_t esp32_recv_spi(char* recvbuf){
     uint8_t status = 0;
     if(xSemaphoreTake(rdySem, ( TickType_t ) RECV_TIMEOUT_TICKS) == pdPASS){
+        memset(&spi_trans, 0, sizeof(spi_trans));
+        spi_trans.length=SPI_PKT_SIZE*8;
         spi_trans.rx_buffer=recvbuf;
         spi_trans.tx_buffer=emptyPacket;
         esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
