@@ -20,11 +20,11 @@
 #include "decode_mobilenet.h"
 #include "esp32_spi_impl.h"
 
-#define DEBUG_CMD 1
+#define DEBUG_CMD 0
 #define debug_cmd_print(...) \
     do { if (DEBUG_CMD) fprintf(stderr, __VA_ARGS__); } while (0)
 
-#define DEBUG_METADATA 1
+#define DEBUG_METADATA 0
 
 #define DEBUG_MESSAGE_CONTENTS 0
 #define MAX_DETECTIONS 16
@@ -478,7 +478,7 @@ void app_main()
         // example of retransmitting a jpeg
         // ----------------------------------------
         // get jpeg size
-        req_success = resend_large_message(PREVIEWSTREAM, spi_proto_instance, spi_send_packet);
+        //req_success = resend_large_message(PREVIEWSTREAM, spi_proto_instance, spi_send_packet);
 
         // ----------------------------------------
         // pop current message/metadata. this tells the depthai to update the info being passed back using the spi_cmds.
