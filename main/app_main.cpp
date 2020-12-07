@@ -20,6 +20,11 @@
 #include "decode_mobilenet.h"
 #include "esp32_spi_impl.h"
 
+#include "SpiPacketParser.hpp"
+#include "depthai-shared/datatype/RawImgDetections.hpp"
+
+#include <memory>
+
 #define DEBUG_CMD 0
 #define debug_cmd_print(...) \
     do { if (DEBUG_CMD) fprintf(stderr, __VA_ARGS__); } while (0)
@@ -453,8 +458,9 @@ void app_main()
         SpiGetMessageResp get_message_resp;
 
         req_success = req_data(&get_message_resp, METASTREAM, spi_proto_instance, spi_send_packet);
+        std::vector<uint8_t> data;
         if(req_success){
-            exampleDecodeMobilenet(get_message_resp);
+            data = std::vector<std::uint8_t>(get_message_resp.data, get_message_resp.data + get_message_resp.data_size);    
             free(get_message_resp.data);
         }
 
@@ -470,6 +476,25 @@ void app_main()
                 json j = json::from_msgpack(get_meta_resp.data, get_meta_resp.data + get_meta_resp.data_size);
                 printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
+
+            dai::DatatypeEnum message_type = dai::parseDatatype(get_message_resp.data, get_message_resp.data_size);
+            switch (message_type)
+            {
+            case dai::DatatypeEnum::ImgDetections :
+            {
+                dai::RawImgDetections det;
+                dai::parseMessage(get_message_resp.data, get_message_resp.data_size, det);
+
+                for(const auto& det : det.detections){
+                    printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
+                }
+            }
+            break;
+            
+            default:
+                break;
+            }
+                    
             free(get_meta_resp.data);
         }
 
