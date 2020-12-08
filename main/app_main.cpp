@@ -477,13 +477,12 @@ void app_main()
                 printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
 
-            dai::DatatypeEnum message_type = dai::parseDatatype(get_message_resp.data, get_message_resp.data_size);
-            switch (message_type)
+            switch ((dai::DatatypeEnum) get_meta_resp.data_type)
             {
             case dai::DatatypeEnum::ImgDetections :
             {
                 dai::RawImgDetections det;
-                dai::parseMessage(get_message_resp.data, get_message_resp.data_size, det);
+                dai::parseMessage(get_meta_resp.data, get_meta_resp.data_size, det);
 
                 for(const auto& det : det.detections){
                     printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);

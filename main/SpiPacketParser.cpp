@@ -26,10 +26,10 @@ inline int readIntLE(uint8_t* data) {
     return data[0] + data[1] * 256 + data[2] * 256 * 256 + data[3] * 256 * 256 * 256;
 }
 
-DatatypeEnum parseDatatype(uint8_t* metaPointer, int metaLength){
-    auto objectType = static_cast<DatatypeEnum>(readIntLE(metaPointer + metaLength - 8));
-    return objectType;
-}
+//DatatypeEnum parseDatatype(uint8_t* metaPointer, int metaLength){
+//    auto objectType = static_cast<DatatypeEnum>(readIntLE(metaPointer + metaLength - 8));
+//    return objectType;
+//}
 
 /*
 std::shared_ptr<RawBuffer> parseMetadata(uint8_t* metaPointer, int metaLength) {
