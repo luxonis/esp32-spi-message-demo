@@ -25,6 +25,8 @@
 
 #include <memory>
 
+#define DECODE_MOBILENET 1
+
 #define DEBUG_CMD 0
 #define debug_cmd_print(...) \
     do { if (DEBUG_CMD) fprintf(stderr, __VA_ARGS__); } while (0)
@@ -452,7 +454,7 @@ void app_main()
 
     while(1) {
         // ----------------------------------------
-        // example of decoding mobilenet
+        // example of receiving messages.
         // ----------------------------------------
         // the req_data method allocates memory for the received packet. we need to be sure to free it when we're done with it.
         SpiGetMessageResp get_message_resp;
@@ -460,7 +462,17 @@ void app_main()
         req_success = req_data(&get_message_resp, METASTREAM, spi_proto_instance, spi_send_packet);
         std::vector<uint8_t> data;
         if(req_success){
-            data = std::vector<std::uint8_t>(get_message_resp.data, get_message_resp.data + get_message_resp.data_size);    
+            if(DECODE_MOBILENET){
+                // ----------------------------------------
+                // example of decoding mobilenet (ENABLE DECODE_MOBILENET flag).
+                // ----------------------------------------
+                exampleDecodeMobilenet(get_message_resp);
+            } else {
+                // ----------------------------------------
+                // receive raw data 
+                // ----------------------------------------
+                data = std::vector<std::uint8_t>(get_message_resp.data, get_message_resp.data + get_message_resp.data_size);    
+            }
             free(get_message_resp.data);
         }
 
@@ -477,6 +489,9 @@ void app_main()
                 printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
 
+            // ----------------------------------------
+            // example of parsing out basic ImgDetection type.
+            // ----------------------------------------
             switch ((dai::DatatypeEnum) get_meta_resp.data_type)
             {
             case dai::DatatypeEnum::ImgDetections :
