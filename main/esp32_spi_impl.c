@@ -104,7 +104,7 @@ void deinit_esp32_spi(){
     assert(ret==ESP_OK);
 }
 
-uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
+uint8_t esp32_send_spi(char* spiSendPacket){
     uint8_t status = 0;
     char discard_recvbuf[BUFF_MAX_SIZE] = {0};
 

@@ -1,4 +1,4 @@
-#include "decode_mobilenet.h"
+#include "decode_raw_mobilenet.h"
 
 float f16Tof32(half f16){
     _float16_shape_type test_float16;
@@ -8,7 +8,7 @@ float f16Tof32(half f16){
     return float16_to_float32(test_float16);
 }
 
-int decode_mobilenet(Detection dets[], half *result, float confidence_thr, int max_detections)
+int decode_raw_mobilenet(Detection dets[], half *result, float confidence_thr, int max_detections)
 {
     int i = 0;
     int detections_nr = 0;

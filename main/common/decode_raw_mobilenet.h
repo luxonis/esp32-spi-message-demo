@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 float f16Tof32(half f16);
-int decode_mobilenet(Detection dets[], half *result, float confidence_thr, int max_detections);
+int decode_raw_mobilenet(Detection dets[], half *result, float confidence_thr, int max_detections);
 
 #ifdef __cplusplus
 }
