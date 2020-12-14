@@ -118,6 +118,26 @@ void run_demo(){
                 printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
 
+            // example of parsing the raw metadata
+//            mySpiApi.parse_metadata(&received_msg.raw_meta_resp);
+
+            switch ((dai::DatatypeEnum) received_msg.raw_meta_resp.data_type)
+                {
+                case dai::DatatypeEnum::ImgDetections :
+                {
+                    dai::RawImgDetections det;
+                    dai::parseMessage(received_msg.raw_meta_resp.data, received_msg.raw_meta_resp.data_size, det);
+
+                    for(const auto& det : det.detections){
+                        printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
+                    }
+                }
+                break;
+                
+                default:
+                    break;
+            }
+
             // free up resources once you're done with the message.
             mySpiApi.free_full_msg(&received_msg);
         }
