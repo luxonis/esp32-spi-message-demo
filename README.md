@@ -107,8 +107,69 @@ cmake .
 cmake --build .
 ./myapp mobilenet-ssd/mobilenet-ssd.blob
 ```
-At this point, you can start something up to monitor debug prints such as “cu” or “minicom”. The example should generate debug prints as objects are detected by the color camera. 
+At this point, you can start something up to monitor debug prints such as “cu” or “minicom”. The example should generate debug prints as objects are detected by the color camera.
+
+## Running Tiny-YOLO, Including Standalone
+
+### Flashing a tinyYOLO Image
+1. From the depthai github repo, use this command to build a tiny yolo blob. Additional testing required to see if we can increase the number of shaves from 4. 
+
+`./depthai_demo.py -cnn tiny-yolo-v3 -sh 4 -cmx 4 -nce 1`
+
+2. If using your own neural network, update `tiny-yolo-v3.json` with your graph’s info. If you have a non 416x416 input size, add the `in_height` and `in_width` as below (done for an example of 624x624 input resolution):
+`vim resources/nn/tiny-yolo-v3/tiny-yolo.json`
+
+```
+"NN_config":
+    {
+        "output_format" : "detection",
+        "NN_family" : "YOLO",
+        "NN_specific_metadata" :
+        { 
+            "classes" : 80,
+            "coordinates" : 4,
+            "in_height" : 624,
+            "in_width" : 624,
+            "anchors" : [10,14, 23,27, 37,58, 81,82, 135,169, 344,319],
+            "anchor_masks" : 
+            {
+                "side26" : [1,2,3],
+                "side13" : [3,4,5]
+            },
+            "iou_threshold" : 0.5,
+            "confidence_threshold" : 0.5
+        }
+    },
+    
+```
+
+3. Change directories to the standaloneYOLOExample directory in your depthai-core repo.
+
+`cd <mypath>/depthai-python/depthai-core/standaloneYOLOExample`
+
+4. Checkout the gen2_common_objdet branch. ***Will be merged into the gen2 branch in the future.
+`git checkout gen2_common_objdet`
+
+5. Build the example.
+
+`cmake .`
+`cmake --build .`
+
+6. Make sure you’ve already installed the bootloader as instructed here and set the device to flash boot mode:
+
+https://docs.google.com/document/d/1Q0Wwjs0djMQOPwRT04k8tL20WWv_5AdwiQcPSeebqsw/edit
+
+7. Run the example and wait for the image to flash..
+
+`./myapp <mypath>/depthai/resources/nn/tiny-yolo-v3/tiny-yolo-v3.blob.sh4cmx4NCE1 <mypath>/depthai/resources/nn/tiny-yolo-v3/tiny-yolo-v3.json`
+
+Make sure the USB C cable is not attached to your DepthAI and reboot the board.
+
+### ESP32 Setup
+For the ESP32 side code, please take a look at the latest on the main branch. You’ll need a git submodule init and update. You’ll also want to disable the this flag in app_main.cpp:
+
+`#define DECODE_MOBILENET 1`
 
 # Known Issues
-* STABILITY - this is what I’d consider an alpha release. I’ve run into issues running long periods of time. We are actively working on this right now however testing such things take a little bit of time. 
+* STABILITY - Although we've caught and fixed a bunch of bugs, and this now seems to be stable, there could still be some lurking ones, and this codebase is under constant improvement, which could include breaking SPI-API changes.  The codebase should be considered transitioning from Alpha to Beta.
 * 300x300 RGB preview is just a little too big to fit in ESP32 memory. Create an example of grabbing MJPEG instead.
