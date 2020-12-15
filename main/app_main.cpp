@@ -43,12 +43,12 @@ void alloc_fail(uint32_t size){
 // ----------------------------------------
 // example of decoding raw mobilenet output
 // ----------------------------------------
-void exampleDecodeRawMobilenet(SpiGetMessageResp *get_message_resp){
+void exampleDecodeRawMobilenet(uint8_t *data){
     json j;
 
     Detection dets[MAX_DETECTIONS];
 
-    int num_found = decode_raw_mobilenet(dets, (half *)get_message_resp->data, 0.5f, MAX_DETECTIONS);
+    int num_found = decode_raw_mobilenet(dets, (half *)data, 0.5f, MAX_DETECTIONS);
     printf("num_found %d \n", num_found);
 
     if(num_found > 0){
@@ -92,11 +92,10 @@ void run_demo(){
     // ----------------------------------------
     // example of grabbing the available streams. they'll match what's defined in the SPI nodes.
     // ----------------------------------------
-    SpiGetStreamsResp p_get_streams_resp;
-    req_success = mySpiApi.spi_get_streams(&p_get_streams_resp);
+    std::vector<std::string> streams = mySpiApi.spi_get_streams();
     printf("Available Streams: \n");
-    for(int i=0; i<p_get_streams_resp.numStreams; i++){
-        printf("%s\n", p_get_streams_resp.stream_names[i]);
+    for(int i=0; i<streams.size(); i++){
+        printf("%s\n", streams[i].c_str());
     }
 
 
@@ -104,42 +103,29 @@ void run_demo(){
         // ----------------------------------------
         // basic example of receiving data and metadata from messages.
         // ----------------------------------------
-        FullMessage received_msg;
-        uint8_t recv_success = mySpiApi.req_full_msg(&received_msg, METASTREAM);
-        if(recv_success){
+        Message received_msg;
+        req_success = mySpiApi.req_message(&received_msg, METASTREAM);
+        if(req_success){
             // example of decoding mobilenet (only for use with raw mobilenet tensor output).
             if(DECODE_RAW_MOBILENET){
-                exampleDecodeRawMobilenet(&received_msg.raw_data_resp);
+                exampleDecodeRawMobilenet(received_msg.raw_data.data);
             }
 
             // print out plain text metadata (for debug purposes).
             if(DEBUG_METADATA){
-                json j = json::from_msgpack(received_msg.raw_meta_resp.data, received_msg.raw_meta_resp.data + received_msg.raw_meta_resp.data_size);
+                json j = json::from_msgpack(received_msg.raw_meta.data, received_msg.raw_meta.data + received_msg.raw_meta.size);
                 printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
 
             // example of parsing the raw metadata
-//            mySpiApi.parse_metadata(&received_msg.raw_meta_resp);
-
-            switch ((dai::DatatypeEnum) received_msg.raw_meta_resp.data_type)
-                {
-                case dai::DatatypeEnum::ImgDetections :
-                {
-                    dai::RawImgDetections det;
-                    dai::parseMessage(received_msg.raw_meta_resp.data, received_msg.raw_meta_resp.data_size, det);
-
-                    for(const auto& det : det.detections){
-                        printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
-                    }
-                }
-                break;
-                
-                default:
-                    break;
+            dai::RawImgDetections det;
+            mySpiApi.parse_metadata(&received_msg.raw_meta, det);
+            for(const auto& det : det.detections){
+                printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
             }
 
             // free up resources once you're done with the message.
-            mySpiApi.free_full_msg(&received_msg);
+            mySpiApi.free_message(&received_msg);
         }
 
 
