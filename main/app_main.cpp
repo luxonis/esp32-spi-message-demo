@@ -15,8 +15,7 @@
 #include "esp32_spi_impl.h"
 #include "spi_api.hpp"
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "depthai-shared/datatype/RawImgDetections.hpp"
 
 #define DECODE_RAW_MOBILENET 0
 #define DEBUG_METADATA 0
@@ -44,8 +43,6 @@ void alloc_fail(uint32_t size){
 // example of decoding raw mobilenet output
 // ----------------------------------------
 void exampleDecodeRawMobilenet(uint8_t *data){
-    json j;
-
     Detection dets[MAX_DETECTIONS];
 
     int num_found = decode_raw_mobilenet(dets, (half *)data, 0.5f, MAX_DETECTIONS);
@@ -84,7 +81,7 @@ void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t
 void run_demo(){
     uint8_t req_success = 0;
 
-    SpiApi mySpiApi;
+    dai::SpiApi mySpiApi;
     mySpiApi.set_send_spi_impl(&esp32_send_spi);
     mySpiApi.set_recv_spi_impl(&esp32_recv_spi);
 
@@ -103,18 +100,12 @@ void run_demo(){
         // ----------------------------------------
         // basic example of receiving data and metadata from messages.
         // ----------------------------------------
-        Message received_msg;
+        dai::Message received_msg;
         req_success = mySpiApi.req_message(&received_msg, METASTREAM);
         if(req_success){
             // example of decoding mobilenet (only for use with raw mobilenet tensor output).
             if(DECODE_RAW_MOBILENET){
                 exampleDecodeRawMobilenet(received_msg.raw_data.data);
-            }
-
-            // print out plain text metadata (for debug purposes).
-            if(DEBUG_METADATA){
-                json j = json::from_msgpack(received_msg.raw_meta.data, received_msg.raw_meta.data + received_msg.raw_meta.size);
-                printf("Unpacked metadata: %s\n", j.dump().c_str());
             }
 
             // example of parsing the raw metadata

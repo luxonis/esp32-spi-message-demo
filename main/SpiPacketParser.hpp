@@ -16,10 +16,5 @@ std::vector<std::uint8_t> serializeData(const std::shared_ptr<RawBuffer>& data);
 
 DatatypeEnum parseDatatype(uint8_t* metaPointer, int metaLength);
 
-template<typename T>
-void parseMessage(uint8_t* metaPointer, int metaLength, T& obj){
-    nlohmann::json jser = nlohmann::json::from_msgpack(metaPointer, metaPointer + (metaLength));
-    nlohmann::from_json(jser, obj);
-}
 
 }  // namespace dai
