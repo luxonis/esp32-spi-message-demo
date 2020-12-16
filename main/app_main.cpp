@@ -13,13 +13,11 @@
 
 #include "decode_raw_mobilenet.h"
 #include "esp32_spi_impl.h"
-#include "spi_api.hpp"
 
+#include "spi_api.hpp"
 #include "depthai-shared/datatype/RawImgDetections.hpp"
 
 #define DECODE_RAW_MOBILENET 0
-#define DEBUG_METADATA 0
-
 #define MAX_DETECTIONS 16
 
 static const char* METASTREAM = "spimetaout";
