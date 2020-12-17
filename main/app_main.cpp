@@ -49,6 +49,30 @@ void run_demo(){
 
 
     while(1) {
+/*
+        // ----------------------------------------
+        // basic example of receiving data and metadata from messages.
+        // ----------------------------------------
+        dai::Message received_msg;
+        req_success = mySpiApi.req_message(&received_msg, METASTREAM);
+        if(req_success){
+            // example of decoding mobilenet (only for use with raw mobilenet tensor output).
+            if(DECODE_RAW_MOBILENET){
+                exampleDecodeRawMobilenet(received_msg.raw_data.data);
+            }
+
+            // example of parsing the raw metadata
+            dai::RawImgDetections det;
+            mySpiApi.parse_metadata(&received_msg.raw_meta, det);
+            for(const auto& det : det.detections){
+                printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
+            }
+
+            // free up resources once you're done with the message.
+            mySpiApi.free_message(&received_msg);
+        }
+*/
+
         // ----------------------------------------
         // example of getting large messages a chunk/packet at a time.
         // ----------------------------------------
