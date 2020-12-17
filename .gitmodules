@@ -1,0 +1,3 @@
+[submodule "components/depthai-spi-api"]
+	path = components/depthai-spi-api
+	url = https://github.com/luxonis/depthai-spi-api.git
