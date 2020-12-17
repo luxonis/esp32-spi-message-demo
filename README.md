@@ -76,8 +76,7 @@ Note that these instructions are intended for a Linux box. It hasn’t been test
 cd ~
 git clone https://github.com/luxonis/esp32-spi-message-demo.git
 cd esp32-spi-message-demo
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
 ### Download depthai-core, which contains the pipeline builder example
@@ -86,8 +85,7 @@ cd ~
 git clone https://github.com/luxonis/depthai-core.git
 cd depthai-core
 git checkout gen2_spi
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
 ### If you haven’t already, set up the ESP32 programmer
