@@ -1,27 +1,3 @@
-# SPI Protocol
-
-SPI messaging is currently arranged in 2 layers. The first is the spi protocol. The spi protocol is the lowest level. It defines a standard packet for all SPI communication. It is a 256 byte packet arranged in the following manner:
-
-```
-typedef struct {
-    uint8_t start;
-    uint8_t data[SPI_PROTOCOL_PAYLOAD_SIZE];
-    uint8_t crc[2];
-    uint8_t end;
-} SpiProtocolPacket;
-```
-start and end are constant bytes to mark the beginning and end of packets.
-```
-static const uint8_t START_BYTE_MAGIC = 0b10101010;
-static const uint8_t END_BYTE_MAGIC = 0b00000000;
-```
-# SPI Messaging
-On top of this we have a layer called SPI messaging. This code defines the following:
-* A list of a supported commands,
-* A way to encapsulate commands going to the MyriadX over SPI.
-* A way to receive and parse command responses. 
-* We’ll go into greater depth as to how exactly to use this in the SPI Messaging Example.
-
 # The SPI Messaging Example
 In order to better show how to use SPI messaging we’ve created a basic example that essentially runs mobilenet on the color camera of DepthAI, then returns the NN output through SPI.  
 
@@ -61,12 +37,7 @@ The example nodes are assembled in the createNNPipelineSPI method of depthai-cor
 Next, let’s look at what the ESP32 device will be doing. The code for this can be found in it’s own repo here:
 https://github.com/luxonis/esp32-spi-message-demo
 
-The core logic for the ESP32 can be found in the app_main method in esp32-spi-messaging-demo/main/app_main.cpp. Here’s a high level overview of what it’s doing:
-1. The ESP32 requests a list of available SPI streamNames using spi_get_streams. This step is optional as we created the pipeline nodes and already know the names of them.
-2. The ESP32 sends a spi_get_size command for a specific streamName.
-3. The ESP32 sends a spi_get_message command specifying a specific streamName
-4. DepthAI will respond with data from that streamName. The ESP32 should expect to receive the amount of data specified in the spi_get_size command. Metadata is included at the end of this message as a json string.
-5. Once you’re done with the current data, use the spi_pop_messages command to prepare a new set of data for retrieval from the MyriadX. The spi_pop_messages command currently pops data for all SPI nodes at once on the MyriadX.
+The core logic for the ESP32 can be found in the app_main method in esp32-spi-messaging-demo/main/app_main.cpp. 
 
 # Building and Running
 Note that these instructions are intended for a Linux box. It hasn’t been tested with Windows yet.
@@ -76,8 +47,7 @@ Note that these instructions are intended for a Linux box. It hasn’t been test
 cd ~
 git clone https://github.com/luxonis/esp32-spi-message-demo.git
 cd esp32-spi-message-demo
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
 ### Download depthai-core, which contains the pipeline builder example
@@ -86,8 +56,7 @@ cd ~
 git clone https://github.com/luxonis/depthai-core.git
 cd depthai-core
 git checkout gen2_spi
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
 ### If you haven’t already, set up the ESP32 programmer
