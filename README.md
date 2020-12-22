@@ -1,3 +1,11 @@
+# Demo
+
+See below for this running on the [BW1092](https://shop.luxonis.com/collections/all/products/bw1092):
+
+[![SPI ESP32 Interface with DepthAI](https://user-images.githubusercontent.com/32992551/102835329-9bfa2100-43b3-11eb-8cce-ce65cb8e600d.png)](https://www.youtube.com/watch?v=S2xYcVoyPxk "Embedded UseCase of DepthAI")
+
+And see https://github.com/luxonis/depthai-experiments/tree/depthai-experiment-spi-jpeg/gen2-spi-stereo for pulling off JPEG and/or depth (including cropping on DepthAI) instead of the MobileNetv2-SSD or tinyYOLOv3 metadata shown below.
+
 # SPI Protocol
 
 SPI messaging is currently arranged in 2 layers. The first is the spi protocol. The spi protocol is the lowest level. It defines a standard packet for all SPI communication. It is a 256 byte packet arranged in the following manner:
