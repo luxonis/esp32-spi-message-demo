@@ -4,7 +4,7 @@ See below for this running on the [BW1092](https://shop.luxonis.com/collections/
 
 [![SPI ESP32 Interface with DepthAI](https://user-images.githubusercontent.com/32992551/102835329-9bfa2100-43b3-11eb-8cce-ce65cb8e600d.png)](https://www.youtube.com/watch?v=S2xYcVoyPxk "Embedded UseCase of DepthAI")
 
-And see https://github.com/luxonis/depthai-experiments/tree/depthai-experiments-spi/gen2-spi for pulling off JPEG and/or depth (including cropping on DepthAI) instead of the MobileNetv2-SSD or tinyYOLOv3 metadata shown below.
+And see https://github.com/luxonis/depthai-experiments/tree/master/gen2-spi for pulling off JPEG and/or depth (including cropping on DepthAI) instead of the MobileNetv2-SSD or tinyYOLOv3 metadata shown below.
 
 # SPI Protocol
 
