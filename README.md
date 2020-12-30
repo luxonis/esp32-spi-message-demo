@@ -111,7 +111,7 @@ idf.py -p /dev/ttyUSB1 flash
 cd ~/depthai-core/example
 cmake .
 cmake --build .
-./myapp mobilenet-ssd/mobilenet-ssd.blob
+./myapp spidemo mobilenet-ssd/mobilenet-ssd.blob
 ```
 At this point, you can start something up to monitor debug prints such as “cu” or “minicom”. The example should generate debug prints as objects are detected by the color camera.
 
