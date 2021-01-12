@@ -51,14 +51,10 @@ Pins in use. The SPI Master can use the GPIO mux, so feel free to change these i
 #define GPIO_CS 15
 #endif
 
-#define PAYLOAD_MAX_SIZE 252
-#define BUFF_MAX_SIZE 256
-#define SPI_PKT_SIZE 256
-
 
 void init_esp32_spi();
 void deinit_esp32_spi();
-uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket);
+uint8_t esp32_send_spi(const char* sendbuf);
 uint8_t esp32_recv_spi(char* recvbuf);
 
 #ifdef __cplusplus

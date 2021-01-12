@@ -104,14 +104,14 @@ void deinit_esp32_spi(){
     assert(ret==ESP_OK);
 }
 
-uint8_t esp32_send_spi(SpiProtocolPacket* spiSendPacket){
+uint8_t esp32_send_spi(const char* sendbuf){
     uint8_t status = 0;
     char discard_recvbuf[BUFF_MAX_SIZE] = {0};
 
     memset(&spi_trans, 0, sizeof(spi_trans));
     spi_trans.length=SPI_PKT_SIZE*8;
     spi_trans.rx_buffer=discard_recvbuf;
-    spi_trans.tx_buffer=spiSendPacket;
+    spi_trans.tx_buffer=sendbuf;
 
     esp_err_t trans_result = spi_device_transmit(handle, &spi_trans);
     if(trans_result == ESP_OK){
