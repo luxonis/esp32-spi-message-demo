@@ -2,25 +2,20 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <FlashMT25Q.hpp>
+
 #include <esp_log.h>
 #include <esp32_spi_impl.h>
 
 #include <driver/gpio.h>
 
-#include "esp_flash.h"
-#include "esp_flash_spi_init.h"
-#include "esp_partition.h"
-#include "esp_vfs.h"
-#include "esp_system.h"
+static const char *TAG = "FlashMT25Q";
+#define PIPELINE_OFFSET 1024*1024
 
-static const char *TAG = "example";
-
-extern "C" {
-   void app_main();
+FlashMT25Q::~FlashMT25Q(){
 }
 
-static esp_flash_t* example_init_ext_flash(void)
-{
+FlashMT25Q::FlashMT25Q(){
     const spi_bus_config_t bus_config = {
         .mosi_io_num = VSPI_IOMUX_PIN_NUM_MOSI,
         .miso_io_num = VSPI_IOMUX_PIN_NUM_MISO,
@@ -49,14 +44,13 @@ static esp_flash_t* example_init_ext_flash(void)
     ESP_ERROR_CHECK(spi_bus_initialize(VSPI_HOST, &bus_config, 1));
 
     // Add device to the SPI bus
-    esp_flash_t* ext_flash;
     ESP_ERROR_CHECK(spi_bus_add_flash_device(&ext_flash, &device_config));
 
     // Probe the Flash chip and initialize it
     esp_err_t err = esp_flash_init(ext_flash);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize external Flash: %s (0x%x)", esp_err_to_name(err), err);
-        return NULL;
+        return;
     }
 
     // Print out the ID and size
@@ -68,15 +62,30 @@ static esp_flash_t* example_init_ext_flash(void)
         ext_flash->size = 1024*1024*1024;
     }
     ESP_LOGI(TAG, "Initialized external Flash, size=%d KB, ID=0x%x", ext_flash->size / 1024, id);
+}
 
-    return ext_flash;
+void FlashMT25Q::read(char* readBuf, uint32_t readAddr, uint32_t readLen){
+    ESP_ERROR_CHECK(esp_flash_read(ext_flash, readBuf, readAddr, readLen));
+}
+
+void FlashMT25Q::write(char* writeBuf, uint32_t writeAddr, uint32_t writeLen){
+    ESP_ERROR_CHECK(esp_flash_write(ext_flash, writeBuf, writeAddr, writeLen));
+}
+
+void FlashMT25Q::eraseRegion(uint32_t eraseAddr, uint32_t eraseLen){
+    // disable write protect.
+    esp_flash_set_chip_write_protect(ext_flash, false);
+
+    // erase first... adjust erase length based off writeLen. for MT25QU01GBBB flash we have 4k sectors ((writeLen-1)>>12).
+    uint32_t eraseLenPadded = 4096 * ((eraseLen-1)>>12) + 4096;
+    ESP_ERROR_CHECK(esp_flash_erase_region(ext_flash, eraseAddr, eraseLenPadded));
 }
 
 
-void readTest(esp_flash_t* flash, uint32_t readAddr, uint32_t readLen){
+void FlashMT25Q::readTest(uint32_t readAddr, uint32_t readLen){
     // read test...
     char *readBuf = (char *) malloc(readLen);
-    ESP_ERROR_CHECK(esp_flash_read(flash, readBuf, readAddr, readLen));
+    ESP_ERROR_CHECK(esp_flash_read(ext_flash, readBuf, readAddr, readLen));
 
     int entriesPerLine = 8;
     for(int i=0; i<readLen; i++){       
@@ -90,13 +99,13 @@ void readTest(esp_flash_t* flash, uint32_t readAddr, uint32_t readLen){
     free(readBuf);
 }
 
-void writeTest(esp_flash_t* flash, uint32_t writeAddr, uint32_t writeLen){
+void FlashMT25Q::writeTest(uint32_t writeAddr, uint32_t writeLen){
     // disable write protect.
-    esp_flash_set_chip_write_protect(flash, false);
+    esp_flash_set_chip_write_protect(ext_flash, false);
 
     // erase first... adjust erase length based off writeLen. for MT25QU01GBBB flash we have 4k sectors ((writeLen-1)>>12).
     uint32_t eraseLen = 4096 * ((writeLen-1)>>12) + 4096;
-    ESP_ERROR_CHECK(esp_flash_erase_region(flash, writeAddr, eraseLen));
+    ESP_ERROR_CHECK(esp_flash_erase_region(ext_flash, writeAddr, eraseLen));
 
     // write test...
     char *writeBuf = (char *) malloc(writeLen);
@@ -105,30 +114,9 @@ void writeTest(esp_flash_t* flash, uint32_t writeAddr, uint32_t writeLen){
     }
     printf("\n");
 
-    ESP_ERROR_CHECK(esp_flash_write(flash, writeBuf, writeAddr, writeLen));
+    ESP_ERROR_CHECK(esp_flash_write(ext_flash, writeBuf, writeAddr, writeLen));
 
     free(writeBuf);
 }
 
 
-//Main application
-void app_main()
-{
-    ESP_ERROR_CHECK(gpio_set_level(GPIO_NUM_33, 1));
-
-    esp_flash_t* flash = example_init_ext_flash();
-
-    uint32_t flashSize = 99;
-    esp_flash_get_size(flash, &flashSize);
-    printf("asdfasdf flashSize = %d\n", flashSize);
-
-    printf("Running read test...\n");
-    readTest(flash, 1048568, 96);
-
-    printf("Running write test...\n");
-    writeTest(flash, 1048576, 4096);
-
-    printf("Running read test...\n");
-    readTest(flash, 1048568, 96);
-
-}
