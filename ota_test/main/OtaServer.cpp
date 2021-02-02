@@ -16,11 +16,11 @@
 
 #include "esp_err.h"
 #include "esp_log.h"
-
 #include "esp_vfs.h"
 #include "esp_spiffs.h"
 #include "esp_http_server.h"
 
+#include <driver/gpio.h>
 #include "FlashMT25Q.hpp"
 
 /* Scratch buffer size */
@@ -35,6 +35,20 @@ struct ota_server_data {
 };
 
 static const char *TAG = "OtaServer";
+static FlashMT25Q myExtFlash;
+
+// When flashing we want to hold down the reset pin of the MyriadX to avoid confilct reading shared NOR flash.
+static void initMXReset(){
+    ESP_ERROR_CHECK(gpio_reset_pin(GPIO_NUM_33));
+    ESP_ERROR_CHECK(gpio_set_direction(GPIO_NUM_33, GPIO_MODE_INPUT_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_pull_mode(GPIO_NUM_33, GPIO_PULLUP_PULLDOWN));
+    ESP_ERROR_CHECK(gpio_set_drive_capability(GPIO_NUM_33, GPIO_DRIVE_CAP_3));
+    ESP_ERROR_CHECK(gpio_set_level(GPIO_NUM_33, 1));
+}
+
+static void setMXReset(bool val){
+    ESP_ERROR_CHECK(gpio_set_level(GPIO_NUM_33, !val));
+}
 
 static esp_err_t receive_and_write(httpd_req_t *req, uint32_t writeOffset){
     ESP_LOGI(TAG, "Receiving file...");
@@ -48,8 +62,9 @@ static esp_err_t receive_and_write(httpd_req_t *req, uint32_t writeOffset){
     int remaining = req->content_len;
 
     //-----------------------------------------------------------------------------------------------------
-    // TODO: Initalize the flash somewhere else and only once...
-    FlashMT25Q myExtFlash;
+    // hold the MX in reset. need sleep?
+    setMXReset(true);
+
     // erase the region we'll be writing to.
     myExtFlash.eraseRegion(writeOffset, req->content_len);
     ESP_LOGI(TAG, "Region erased! %d to %d", DAP_FLASH_START, DAP_FLASH_START+req->content_len);
@@ -82,7 +97,9 @@ static esp_err_t receive_and_write(httpd_req_t *req, uint32_t writeOffset){
     }
 
     //-----------------------------------------------------------------------------------------------------
+    // release reset on MX.
     myExtFlash.readTest(DAP_FLASH_START, 100);
+    setMXReset(false);
     //-----------------------------------------------------------------------------------------------------
 
     /* Redirect onto root to see the updated file list */
@@ -109,6 +126,9 @@ static esp_err_t upload_dap_post_handler(httpd_req_t *req)
 /* Function to start the ota server */
 esp_err_t start_ota_server()
 {
+    // initialize gpio for holding MX in reset
+    initMXReset();
+
     static struct ota_server_data *server_data = NULL;
 
     if (server_data) {

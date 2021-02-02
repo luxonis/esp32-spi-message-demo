@@ -18,8 +18,6 @@
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
 
-#include <driver/gpio.h>
-
 extern "C" {
    void app_main();
 }
@@ -30,14 +28,6 @@ esp_err_t start_ota_server();
 
 void app_main(void)
 {
-    ESP_ERROR_CHECK(gpio_reset_pin(GPIO_NUM_33));
-    ESP_ERROR_CHECK(gpio_set_direction(GPIO_NUM_33, GPIO_MODE_INPUT_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_level(GPIO_NUM_33, 0));
-usleep(10000);
-
-    
-//printf("asdfasdf 333333333333333333333333333333333333333333333333333333333333333333333333333 %d\n", gpio_get_level(GPIO_NUM_33));
-
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -50,5 +40,4 @@ usleep(10000);
 
     /* Start the file server */
     ESP_ERROR_CHECK(start_ota_server());
-
 }
