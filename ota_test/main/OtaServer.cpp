@@ -109,7 +109,6 @@ static esp_err_t receive_and_write(httpd_req_t *req, uint32_t writeOffset){
     return ESP_OK;
 }
 
-
 /* Handler to upload a ota onto the server */
 static esp_err_t upload_bl_post_handler(httpd_req_t *req)
 {
@@ -120,6 +119,42 @@ static esp_err_t upload_bl_post_handler(httpd_req_t *req)
 static esp_err_t upload_dap_post_handler(httpd_req_t *req)
 {
     return receive_and_write(req, DAP_FLASH_START);
+}
+
+static esp_err_t redirect(httpd_req_t *req)
+{
+    httpd_resp_set_status(req, "307 Temporary Redirect");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_send(req, NULL, 0);  // Response body can be empty
+    return ESP_OK;
+}
+
+/* Handler to respond with an icon file embedded in flash.
+ * Browsers expect to GET website icon at URI /favicon.ico.
+ * This can be overridden by uploading file with same name */
+static esp_err_t get_favicon(httpd_req_t *req)
+{
+    extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
+    extern const unsigned char favicon_ico_end[]   asm("_binary_favicon_ico_end");
+    const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
+    httpd_resp_set_type(req, "image/x-icon");
+    httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
+    return ESP_OK;
+}
+
+// Get upload_script.html
+static esp_err_t get_html(httpd_req_t *req)
+{
+    /* Get handle to embedded file upload script */
+    extern const unsigned char upload_script_start[] asm("_binary_upload_script_html_start");
+    extern const unsigned char upload_script_end[]   asm("_binary_upload_script_html_end");
+    const size_t upload_script_size = (upload_script_end - upload_script_start);
+
+    httpd_resp_send_chunk(req, (const char *)upload_script_start, upload_script_size);
+
+    /* Send empty chunk to signal HTTP response completion */
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
 }
 
 
@@ -157,24 +192,49 @@ esp_err_t start_ota_server()
         return ESP_FAIL;
     }
 
-
-    /* URI handler for uploading files to server */
+    /* URI handler for uploading pipeline to server */
     httpd_uri_t dap_upload = {
-        .uri       = "/upload_dap/*",   // Match all URIs of type /upload/path/to/file
+        .uri       = "/upload_dap",
         .method    = HTTP_POST,
         .handler   = upload_dap_post_handler,
-        .user_ctx  = server_data    // Pass server data as context
+        .user_ctx  = server_data // Pass server data as context
     };
     httpd_register_uri_handler(server, &dap_upload);
 
-    /* URI handler for uploading files to server */
+    /* URI handler for uploading bootloader to server */
     httpd_uri_t bl_upload = {
-        .uri       = "/upload_bl/*",   // Match all URIs of type /upload/path/to/file
+        .uri       = "/upload_bl",
         .method    = HTTP_POST,
         .handler   = upload_bl_post_handler,
-        .user_ctx  = server_data    // Pass server data as context
+        .user_ctx  = server_data // Pass server data as context
     };
     httpd_register_uri_handler(server, &bl_upload);
+
+    /* URI handler for getting HTML */
+    httpd_uri_t favicon = {
+        .uri       = "/favicon.ico",
+        .method    = HTTP_GET,
+        .handler   = get_favicon,
+        .user_ctx  = server_data
+    };
+    httpd_register_uri_handler(server, &favicon);
+
+    /* URI handler for getting HTML */
+    httpd_uri_t html = {
+        .uri       = "/",
+        .method    = HTTP_GET,
+        .handler   = get_html,
+        .user_ctx  = server_data
+    };
+    httpd_register_uri_handler(server, &html);
+
+    httpd_uri_t redirect_handler = {
+        .uri       = "/*",
+        .method    = HTTP_GET,
+        .handler   = redirect,
+        .user_ctx  = server_data
+    };
+    httpd_register_uri_handler(server, &redirect_handler);
 
     return ESP_OK;
 }

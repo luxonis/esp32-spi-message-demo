@@ -1,81 +1,67 @@
-<table class="fixed" border="0">
-    <col width="1000px" /><col width="500px" />
-    <tr><td>
-        <h2>ESP32 File Server</h2>
-    </td><td>
-        <table border="0">
-            <tr>
-                <td>
-                    <label for="newfile">Upload a file</label>
-                </td>
-                <td colspan="2">
-                    <input id="newfile" type="file" onchange="setpath()" style="width:100%;">
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label for="filepath">Set path on server</label>
-                </td>
-                <td>
-                    <input id="filepath" type="text" style="width:100%;">
-                </td>
-                <td>
-                    <button id="upload" type="button" onclick="upload()">Upload</button>
-                </td>
-            </tr>
-        </table>
-    </td></tr>
-</table>
+<!DOCTYPE html>
+<html>
+<body>
+	<h2>Upload bootloader or pipeline to ESP32</h2>
+	<label for="file">Upload a file</label>
+	<input id="file" type="file" accept=".bin,.dap" style="width:100%;">
+	<button id="uploadButton" onclick="upload()">Upload file</button>
+</body>
+</html>
 <script>
-function setpath() {
-    var default_path = document.getElementById("newfile").files[0].name;
-    document.getElementById("filepath").value = default_path;
-}
+
+// Max size of an individual file. Make sure this
+// value is same as that set in file_server.c
+const MAX_FILE_SIZE = 1000 * 1024;
+const MAX_FILE_SIZE_STR = "1000KB";
+
 function upload() {
-    var filePath = document.getElementById("filepath").value;
-    var upload_path = "/upload/" + filePath;
-    var fileInput = document.getElementById("newfile").files;
+	let file = getFile();
+	let path = getPath(file);
+	if (!file || !path) return;
 
-    /* Max size of an individual file. Make sure this
-     * value is same as that set in file_server.c */
-    var MAX_FILE_SIZE = 1000*1024;
-    var MAX_FILE_SIZE_STR = "1000KB";
+	document.getElementById("file").disabled = true;
+	document.getElementById("uploadButton").disabled = true;
 
-    if (fileInput.length == 0) {
-        alert("No file selected!");
-    } else if (filePath.length == 0) {
-        alert("File path on server is not set!");
-    } else if (filePath.indexOf(' ') >= 0) {
-        alert("File path on server cannot have spaces!");
-    } else if (filePath[filePath.length-1] == '/') {
-        alert("File name not specified after path!");
-    } else if (fileInput[0].size > 1000*1024) {
-        alert("File size must be less than 1000KB!");
-    } else {
-        document.getElementById("newfile").disabled = true;
-        document.getElementById("filepath").disabled = true;
-        document.getElementById("upload").disabled = true;
-
-        var file = fileInput[0];
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (xhttp.readyState == 4) {
-                if (xhttp.status == 200) {
-                    document.open();
-                    document.write(xhttp.responseText);
-                    document.close();
-                } else if (xhttp.status == 0) {
-                    alert("Server closed the connection abruptly!");
-                    location.reload()
-                } else {
-                    alert(xhttp.status + " Error!\n" + xhttp.responseText);
-                    location.reload()
-                }
-            }
-        };
-        xhttp.open("POST", upload_path, true);
-        xhttp.send(file);
-    }
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function () {
+		if (xhttp.readyState == 4) {
+			if (xhttp.status == 200) {
+				document.open();
+				document.write(xhttp.responseText);
+				document.close();
+			} else if (xhttp.status == 0) {
+				alert("Server closed the connection abruptly!");
+				location.reload()
+			} else {
+				alert(xhttp.status + " Error!\n" + xhttp.responseText);
+				location.reload()
+			}
+		}
+	};
+	xhttp.open("POST", path, true);
+	xhttp.send(file);
 }
 
+function getFile() {
+	let inputFile = document.getElementById("file").files;
+	if (inputFile.length == 0) {
+		alert("No file selected!");
+	} else if (MAX_FILE_SIZE < inputFile[0].size) {
+		alert(`File size must be less than ${MAX_FILE_SIZE_STR}!`);
+	} else {
+		return inputFile[0];
+	}
+}
+
+function getPath(file) {
+	if (file.name.toLowerCase().endsWith('.dap')) {
+		return window.location.href + 'upload_dap';
+	}
+	else if (file.name.toLowerCase().endsWith('.bin')) {
+		return window.location.href + 'upload_bl';
+	}
+	else {
+		alert('Selected file name doesn\'t end with .dap or .bin!');
+	}
+}
 </script>

@@ -3,3 +3,4 @@ sdkconfig
 CMakeOutput.log
 main/build/*
 .vscode/
+**/build
