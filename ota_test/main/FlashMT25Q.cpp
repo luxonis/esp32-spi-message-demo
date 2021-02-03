@@ -26,11 +26,11 @@ FlashMT25Q::FlashMT25Q(){
 
     const esp_flash_spi_device_config_t device_config = {
         .host_id = VSPI_HOST,
+        .cs_id = 0,
         .cs_io_num = VSPI_IOMUX_PIN_NUM_CS,
         .io_mode = SPI_FLASH_DIO,
         .speed = ESP_FLASH_40MHZ,
-        .input_delay_ns = 0,
-        .cs_id = 0
+        .input_delay_ns = 0
     };
 
     ESP_LOGI(TAG, "Initializing external SPI Flash");
