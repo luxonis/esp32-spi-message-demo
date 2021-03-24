@@ -6,7 +6,7 @@
 #include "esp32_spi_impl.h"
 
 #include "spi_api.hpp"
-
+#include <cmath>
 
 static const char* METASTREAM = "spimetaout";
 
@@ -30,10 +30,14 @@ void run_demo(){
         req_success = mySpiApi.req_message(&received_msg, METASTREAM);
         if(req_success){
             // example of parsing the raw metadata
-            dai::RawDepthCalculatorData raw_depth;
-            mySpiApi.parse_metadata(&received_msg.raw_meta, raw_depth);
-            for(const auto& det : raw_depth.depth){
-                printf("average depth: %.3f \n", det.depth_avg);
+            dai::RawSpatialLocations rawSpatialLocations;
+            mySpiApi.parse_metadata(&received_msg.raw_meta, rawSpatialLocations);
+            for(const auto& spatialData : rawSpatialLocations.spatialLocations){
+                auto x = spatialData.spatialCoordinates.x;
+                auto y = spatialData.spatialCoordinates.y;
+                auto z = spatialData.spatialCoordinates.z;
+                auto euclideanDistance = std::sqrt(x*x + y*y + z*z);
+                printf("Euclidean distance %d mm, X: %d mm, Y: %d mm, Z: %d mm \n",(int)euclideanDistance,(int)x,(int)y,(int)z);
             }
 
             // free up resources once you're done with the message.
