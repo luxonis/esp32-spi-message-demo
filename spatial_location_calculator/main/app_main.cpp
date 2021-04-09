@@ -33,6 +33,8 @@ void run_demo(){
             dai::RawSpatialLocations rawSpatialLocations;
             mySpiApi.parse_metadata(&received_msg.raw_meta, rawSpatialLocations);
             for(const auto& spatialData : rawSpatialLocations.spatialLocations){
+                auto avgDepth = spatialData.depthAverage;
+                auto depthAveragePixelCount = spatialData.depthAveragePixelCount;
                 auto x = spatialData.spatialCoordinates.x;
                 auto y = spatialData.spatialCoordinates.y;
                 auto z = spatialData.spatialCoordinates.z;
