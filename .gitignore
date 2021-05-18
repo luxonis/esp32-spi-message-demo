@@ -1,4 +1,4 @@
-build/*
+*/build/*
 sdkconfig
 CMakeOutput.log
 main/build/*
