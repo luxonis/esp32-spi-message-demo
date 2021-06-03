@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
 
 #include "decode_raw_mobilenet.h"
 #include "esp32_spi_impl.h"

@@ -8,4 +8,4 @@ set(EXTRA_COMPONENT_DIRS
     ../components
 )
 
-project(spi-slave-sender)
+project(people-tracker)

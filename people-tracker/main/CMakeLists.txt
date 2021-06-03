@@ -3,7 +3,7 @@ set(SOURCES
     app_main.cpp
 )
 
-set(INCLUDE_DIRS  
+set(INCLUDE_DIRS
     .
 )
 
