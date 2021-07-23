@@ -78,9 +78,6 @@ void run_demo(){
     img_frame.ts.sec = 1;
     img_frame.ts.nsec = 123456789;
 
-    img_frame.tsDevice.nsec = 123456789;
-    img_frame.tsDevice.nsec = 123456789;
-
     img_frame.category = 0;
     img_frame.instanceNum = 1;
     img_frame.sequenceNum = 123;

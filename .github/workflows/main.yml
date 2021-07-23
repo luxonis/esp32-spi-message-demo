@@ -1,0 +1,23 @@
+name: ESP32 CI
+
+on: [push]
+
+jobs:
+  builder:
+    name: Build ESP32 projects
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Install ESP-IDF
+        uses: CalinRadoni/esp-idf-v4-action@v2
+        with:
+          esp_idf_version: 'v4.1'
+
+      - name: Build
+        run: |
+          source ~/esp/esp-idf/export.sh
+          ci/build_all_projects.sh
