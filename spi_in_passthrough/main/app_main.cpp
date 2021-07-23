@@ -7,7 +7,6 @@
 #include "esp32_spi_impl.h"
 
 #include "spi_api.hpp"
-#include "SpiPacketParser.hpp"
 
 #define MAX_DETECTIONS 16
 
@@ -67,46 +66,32 @@ void run_demo(){
     }
 
     // create a Raw/Meta
-    auto sp_send_msg = std::make_shared<dai::RawImgFrame>();
-    dai::RawImgFrame* send_msg = sp_send_msg.get();
+    dai::RawImgFrame img_frame;
+    img_frame.fb.width = 180;
+    img_frame.fb.height = 180;
+    img_frame.fb.stride = 180;
+    img_frame.fb.bytesPP = 1;
+    img_frame.fb.p1Offset = 32400;
+    img_frame.fb.p2Offset = 64800;
+    img_frame.fb.p3Offset = 97200;
 
-    if(send_msg==NULL){
-        printf("Failed to create/get dai message. Aborting...\n");
-        return;
-    }
+    img_frame.ts.sec = 1;
+    img_frame.ts.nsec = 123456789;
 
-    dai::RawImgFrame::Specs send_msg_specs;
-    send_msg_specs.width = 180;
-    send_msg_specs.height = 180;
-    send_msg_specs.stride = 180;
-    send_msg_specs.bytesPP = 1;
-    send_msg_specs.p1Offset = 32400;
-    send_msg_specs.p2Offset = 64800;
-    send_msg_specs.p3Offset = 97200;
+    img_frame.tsDevice.nsec = 123456789;
+    img_frame.tsDevice.nsec = 123456789;
 
-    dai::Timestamp ts;
-    ts.sec = 1;
-    ts.nsec = 123456789;
+    img_frame.category = 0;
+    img_frame.instanceNum = 1;
+    img_frame.sequenceNum = 123;
 
-    send_msg->fb = send_msg_specs;
-    send_msg->category = 0;
-    send_msg->instanceNum = 1;
-    send_msg->sequenceNum = 123;
-    send_msg->ts = ts;
-
-    // attach the frame data
-    send_msg->data = contents;
-    
-    // set base/content
-    std::vector<std::uint8_t> metadata;
-    dai::DatatypeEnum datatype;
-    send_msg->serialize(metadata, datatype);
-
+    // copy the frame data
+    img_frame.data = contents;
 
     // just sending the same data over and over again for now.
     while(1) {
         printf("Sending input\n");
-        mySpiApi.send_dai_message(sp_send_msg, "spiin");
+        mySpiApi.send_message(img_frame, "spiin");
 
         // ----------------------------------------
         // example of getting large messages a chunk/packet at a time.

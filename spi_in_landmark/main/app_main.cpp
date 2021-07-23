@@ -7,7 +7,6 @@
 #include "esp32_spi_impl.h"
 
 #include "spi_api.hpp"
-#include "SpiPacketParser.hpp"
 
 #define MAX_DETECTIONS 16
 
@@ -55,53 +54,37 @@ void run_demo(){
     std::vector<std::uint8_t> contents(6912, 0);
     uint8_t packCount = 0;
     for(int i=0; i<6912; i++){
-        if(i%252==0){
-            contents[i] = packCount;
-            packCount++;
-        }
+        contents[i] = i;
     }
 
     // create a Raw/Meta
-    auto sp_send_msg = std::make_shared<dai::RawImgFrame>();
-    dai::RawImgFrame* send_msg = sp_send_msg.get();
+    dai::RawImgFrame img_frame;
 
-    if(send_msg==NULL){
-        printf("Failed to create/get dai message. Aborting...\n");
-        return;
-    }
+    // framebuffer
+    img_frame.fb.width = 48;
+    img_frame.fb.height = 48;
+    img_frame.fb.stride = 48;
+    img_frame.fb.bytesPP = 1;
+    img_frame.fb.p1Offset = 0;
+    img_frame.fb.p2Offset = 2304;
+    img_frame.fb.p3Offset = 4608;
 
-    dai::RawImgFrame::Specs send_msg_specs;
-    send_msg_specs.width = 48;
-    send_msg_specs.height = 48;
-    send_msg_specs.stride = 48;
-    send_msg_specs.bytesPP = 1;
-    send_msg_specs.p1Offset = 0;
-    send_msg_specs.p2Offset = 2304;
-    send_msg_specs.p3Offset = 4608;
+    // timestamp
+    img_frame.ts.sec = 1;
+    img_frame.ts.nsec = 123456789;
 
-    dai::Timestamp ts;
-    ts.sec = 1;
-    ts.nsec = 123456789;
+    // additional details
+    img_frame.category = 0;
+    img_frame.instanceNum = 1;
+    img_frame.sequenceNum = 123;
 
-    send_msg->fb = send_msg_specs;
-    send_msg->category = 0;
-    send_msg->instanceNum = 1;
-    send_msg->sequenceNum = 123;
-    send_msg->ts = ts;
-
-    // attach the frame data
-    send_msg->data = contents;
-    
-    // set base/content
-    std::vector<std::uint8_t> metadata;
-    dai::DatatypeEnum datatype;
-    send_msg->serialize(metadata, datatype);
-
+    // Move actual frame data to message
+    img_frame.data = std::move(contents);
 
     // just sending the same data over and over again for now.
     while(1) {
 
-        if(mySpiApi.send_dai_message(sp_send_msg, "spiin")){
+        if(mySpiApi.send_message(img_frame, "spiin")){
             // ----------------------------------------
             // example of getting large messages a chunk/packet at a time.
             // ----------------------------------------
