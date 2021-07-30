@@ -40,3 +40,7 @@ idf.py build
 # spi_in_passthrough
 cd $ROOT_DIR/spi_in_passthrough
 idf.py build
+
+# gpio_interrupts
+cd $ROOT_DIR/gpio_interrupts
+idf.py build
