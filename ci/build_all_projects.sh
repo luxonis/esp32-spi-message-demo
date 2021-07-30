@@ -44,3 +44,7 @@ idf.py build
 # gpio_interrupts
 cd $ROOT_DIR/gpio_interrupts
 idf.py build
+
+# speed_benchmark
+cd $ROOT_DIR/speed_benchmark
+idf.py build
