@@ -16,7 +16,7 @@ static const char* PREVIEWSTREAM = "spipreview";
 // example callback for chunking up large messages.
 auto t1 = std::chrono::steady_clock::now();
 uint32_t example_chunk_recv_size = 0;
-void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t message_size){
+void example_chunk_message(void* received_packet, uint32_t packet_size, uint32_t message_size){
     example_chunk_recv_size += packet_size;
 
     if(std::chrono::steady_clock::now() - t1 > std::chrono::seconds(1)){
