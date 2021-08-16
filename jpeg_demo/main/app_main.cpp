@@ -21,7 +21,7 @@ extern "C" {
 // example callback for chunking up large messages.
 // ----------------------------------------
 uint32_t example_chunk_recv_size = 0;
-void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t message_size){
+void example_chunk_message(void* received_packet, uint32_t packet_size, uint32_t message_size){
     example_chunk_recv_size += packet_size;
 
     printf("example_chunk_message called back packet %d/%d\n", example_chunk_recv_size, message_size);

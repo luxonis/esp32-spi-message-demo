@@ -1,4 +1,3 @@
-import cv2
 import depthai as dai
 from time import sleep
 
@@ -29,5 +28,5 @@ videnc.bitstream.link(spiout_preview.input);
 
 # Start device
 with dai.Device(pipeline) as device:
-    while True:
+    while not device.isClosed():
         sleep(1)
