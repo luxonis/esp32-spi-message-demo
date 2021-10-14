@@ -15,12 +15,12 @@ script.setScript("""
         time.sleep(1) # Sleep 1 sec
 """)
 
-spi = pipeline.createSPIOut()
+spi = pipeline.create(dai.node.SPIOut)
 spi.setStreamName("spimetaout")
 spi.setBusId(0)
 script.outputs['out'].link(spi.input)
 
-xlink = pipeline.createXLinkOut()
+xlink = pipeline.create(dai.node.XLinkOut)
 xlink.setStreamName("test")
 script.outputs['out'].link(xlink.input)
 

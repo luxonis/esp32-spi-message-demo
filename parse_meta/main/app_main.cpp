@@ -24,14 +24,12 @@ void run_demo(){
     mySpiApi.set_send_spi_impl(&esp32_send_spi);
     mySpiApi.set_recv_spi_impl(&esp32_recv_spi);
 
-
     while(1) {
         // ----------------------------------------
         // basic example of receiving data and metadata from messages.
         // ----------------------------------------
         dai::Message received_msg;
-        req_success = mySpiApi.req_message(&received_msg, METASTREAM);
-        if(req_success){
+        if(mySpiApi.req_message(&received_msg, METASTREAM)){
             // example of parsing the raw metadata
             dai::RawImgDetections det;
             mySpiApi.parse_metadata(&received_msg.raw_meta, det);
@@ -40,13 +38,10 @@ void run_demo(){
             }
 
             // free up resources once you're done with the message.
+            // and pop the message from the queue
             mySpiApi.free_message(&received_msg);
+            mySpiApi.spi_pop_messages();
         }
-
-        // ----------------------------------------
-        // pop current message/metadata. this tells the depthai to update the info being passed back using the spi_cmds.
-        // ----------------------------------------
-        req_success = mySpiApi.spi_pop_messages();
     }
 }
 

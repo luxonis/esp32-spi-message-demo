@@ -17,24 +17,16 @@ cam_color         = pipeline.createColorCamera()
 spiout_preview    = pipeline.createSPIOut()
 videnc            = pipeline.createVideoEncoder()
 
-# set up color camera and link to NN node
+# set up color camera
 cam_color.setPreviewSize(300, 300);
-cam_color.setVideoSize(640, 480);
 cam_color.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P);
 cam_color.setInterleaved(False);
 cam_color.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR);
 
-# VideoEncoder
-videnc.setDefaultProfilePreset(640, 480, 30, dai.VideoEncoderProperties.Profile.MJPEG);
-
 # Link plugins CAM -> ENCODER -> SPI OUT
-cam_color.video.link(videnc.input);
 spiout_preview.setStreamName("spipreview");
 spiout_preview.setBusId(0);
-videnc.bitstream.link(spiout_preview.input);
-
-spiout_preview.input.setBlocking(False)
-spiout_preview.input.setQueueSize(1)
+cam_color.preview.link(spiout_preview.input);
 
 with dai.Device(pipeline) as device:
     while not device.isClosed():

@@ -7,9 +7,6 @@
 
 #include "spi_api.hpp"
 
-#define MAX_DETECTIONS 16
-
-static const char* METASTREAM = "spimetaout";
 static const char* PREVIEWSTREAM = "spipreview";
 
 extern "C" {
@@ -22,7 +19,6 @@ void run_demo(){
     dai::SpiApi mySpiApi;
     mySpiApi.set_send_spi_impl(&esp32_send_spi);
     mySpiApi.set_recv_spi_impl(&esp32_recv_spi);
-
 
     int newlineiter = 0;
     int newlinemod = 20;
@@ -44,9 +40,10 @@ void run_demo(){
             printf("\n");
             // free up resources once you're done with the message.
             free(received_data.data);
+            // pop message after reading
+            mySpiApi.spi_pop_message(PREVIEWSTREAM);
         }
 
-        req_success = mySpiApi.spi_pop_messages();
     }
 }
 

@@ -2,24 +2,6 @@
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)
 
-HTTP file server example demonstrates file serving with both upload and download capability, using the `esp_http_server` component of ESP-IDF. The following URIs are provided by the server:
-
-| URI                  | Method  | Description                                                                               |
-|----------------------|---------|-------------------------------------------------------------------------------------------|
-|`index.html`          | GET     | Redirects to `/`                                                                          |
-|`favicon.ico`         | GET     | Browsers use this path to retrieve page icon which is embedded in flash                   |
-|`/file/`                   | GET     | Responds with webpage displaying list of files on SPIFFS and form for uploading new files |
-|`/<file path>`        | GET     | For downloading files stored on SPIFFS                                                    |
-|`/upload/<file path>` | POST    | For uploading files on to SPIFFS. Files are sent as body of HTTP post requests            |
-|`/delete/<file path>` | POST    | Command for deleting a file from SPIFFS                                                   |
-|`/getframe/`           | GET    | See MJPEG stream                                                   |
-
-File server implementation can be found under `main/file_server.cpp` which uses SPIFFS for file storage. `main/upload_script.html` has some HTML, JavaScript and Ajax content used for file uploading, which is embedded in the flash image and used as it is when generating the home page of the file server.
-
-## Note
-
-`/index.html` and `/favicon.ico` can be overridden by uploading files with same pathname to SPIFFS.
-
 ## Usage
 
 * Open the project configuration menu (`idf.py menuconfig`) go to `Example Configuration` ->

@@ -19,9 +19,10 @@ void run_demo(){
     mySpiApi.set_send_spi_impl(&esp32_send_spi);
     mySpiApi.set_recv_spi_impl(&esp32_recv_spi);
 
-
+    bool receivedAnyMessage = false;
     while(1) {
         dai::Message spatialDataMsg;
+
         if(mySpiApi.req_message(&spatialDataMsg, "spatialData")){
             // example of parsing the raw metadata
             dai::RawSpatialLocations rawSpatialLocations;
@@ -37,8 +38,9 @@ void run_demo(){
             }
             // free up resources once you're done with the message.
             mySpiApi.free_message(&spatialDataMsg);
+            mySpiApi.spi_pop_message("spatialData");
+            receivedAnyMessage = true;
         }
-        mySpiApi.spi_pop_message("spatialData");
 
         dai::Message nnMsg;
         if(mySpiApi.req_message(&nnMsg, "nn")){
@@ -49,8 +51,15 @@ void run_demo(){
             }
             // free up resources once you're done with the message.
             mySpiApi.free_message(&nnMsg);
+            mySpiApi.spi_pop_message("nn");
+            receivedAnyMessage = true;
         }
-        mySpiApi.spi_pop_message("nn");
+
+        if(!receivedAnyMessage){
+            // Delay pooling of messages
+            usleep(1000);
+        }
+
     }
 }
 
