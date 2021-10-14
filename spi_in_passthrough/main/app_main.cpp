@@ -23,7 +23,7 @@ extern "C" {
 // ----------------------------------------
 uint32_t example_chunk_recv_size = 0;
 uint32_t skip_print_cnt = 0;
-void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t message_size){
+void example_chunk_message(void* received_packet, uint32_t packet_size, uint32_t message_size){
     example_chunk_recv_size += packet_size;
 
     // print contents...

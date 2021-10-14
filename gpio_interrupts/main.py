@@ -30,5 +30,5 @@ script.setScript("""
 
 # Connect to device with pipeline
 with dai.Device(pipeline) as device:
-    while True:
+    while not device.isClosed():
         time.sleep(1)

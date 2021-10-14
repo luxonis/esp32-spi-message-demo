@@ -46,7 +46,7 @@ FILE* JPEG_FILE = NULL;
 bool write_jpeg = false;
 
 uint8_t skip_print = 0;
-void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t message_size){
+void example_chunk_message(void* received_packet, uint32_t packet_size, uint32_t message_size){
 
     // if write file var is set and it's the first packet of a message...
     if( write_jpeg && !JPEG_FILE && example_chunk_recv_size == 0){
@@ -57,7 +57,7 @@ void example_chunk_message(char* received_packet, uint32_t packet_size, uint32_t
         if (!JPEG_FILE) {
             printf("Failed to create file : %s", jpeg_path);
         }
-    }   
+    }
 
     example_chunk_recv_size += packet_size;
     if(skip_print%16 == 0){
