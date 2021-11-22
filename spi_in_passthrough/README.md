@@ -1,7 +1,7 @@
 ## Gen2 SPIIn/SPIOut Loopback
 
 ### Overview:
-This demo requires an ESP32 board connected via SPI to the DepthAI. The easiest way to accomplish this is to get a hold of an BW1092 board. It has an integrated ESP32 already connected to the DepthAI.
+This demo requires an ESP32 board connected via SPI to the DepthAI. The easiest way to accomplish this is to get a hold of an [OAK IOT device](https://docs.luxonis.com/projects/hardware/en/latest/#iot-designs), as they have an integrated ESP32 already connected to the Myriad X VPU via SPI.
 
 ### On the DepthAI:
 In main.py, we create a pipeline that just loops back input from SPIIn to SPIOut.

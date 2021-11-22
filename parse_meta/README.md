@@ -3,7 +3,7 @@
 ## ESP Side Raw Data Parsing Demo
 
 ### Overview:
-This demo requires an ESP32 board connected via SPI to the DepthAI. The easiest way to accomplish this is to get a hold of an BW1092 board. It has an integrated ESP32 already connected to the DepthAI.
+This demo requires an ESP32 board connected via SPI to the DepthAI. The easiest way to accomplish this is to get a hold of an [OAK IOT device](https://docs.luxonis.com/projects/hardware/en/latest/#iot-designs), as they have an integrated ESP32 already connected to the Myriad X VPU via SPI.
 
 This demo showcases device side result parsing for known network types. Raw results from networks such as YOLO quickly become larger than the ESP32 can handle. To handle this for common network types DetectionNetwork nodes can be used. The DetectionNetwork node takes in a neural network blob and outputs object detection results in a simplified format that the ESP32 can read.
 
