@@ -8,8 +8,8 @@ This a hello world for the SPIIn node. It basically just returns whatever is sen
 '''
 
 # Any data that's passed in will be passed back out the SPI interface.
-print("Creating SPI pipeline: ")
-print("COLOR CAM -> ENCODER -> SPI OUT")
+print("Creating SPI pipeline:")
+print("SPIIn -> SPIOut")
 pipeline = dai.Pipeline()
 
 spiin_nn = pipeline.create(dai.node.SPIIn)
