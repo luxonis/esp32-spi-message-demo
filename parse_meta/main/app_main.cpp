@@ -41,6 +41,9 @@ void run_demo(){
             // and pop the message from the queue
             mySpiApi.free_message(&received_msg);
             mySpiApi.spi_pop_messages();
+        } else {
+            // Periodically check if new messages are available
+            usleep(1000);
         }
     }
 }
