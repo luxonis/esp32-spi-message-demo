@@ -12,4 +12,4 @@ set(EXTRA_COMPONENT_DIRS
     ../components
 )
 
-project(script_node_communication)
+project(script-node-communication)
