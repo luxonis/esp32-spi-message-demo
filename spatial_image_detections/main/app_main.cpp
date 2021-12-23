@@ -8,10 +8,7 @@
 
 #include "spi_api.hpp"
 
-#define MAX_DETECTIONS 16
-
 static const char* METASTREAM = "spimetaout";
-static const char* PREVIEWSTREAM = "spipreview";
 
 extern "C" {
    void app_main();
@@ -24,27 +21,29 @@ void run_demo(){
     mySpiApi.set_send_spi_impl(&esp32_send_spi);
     mySpiApi.set_recv_spi_impl(&esp32_recv_spi);
 
+
     while(1) {
         // ----------------------------------------
         // basic example of receiving data and metadata from messages.
         // ----------------------------------------
         dai::Message received_msg;
-        if(mySpiApi.req_message(&received_msg, METASTREAM)){
+        req_success = mySpiApi.req_message(&received_msg, METASTREAM);
+        if(req_success){
             // example of parsing the raw metadata
-            dai::RawImgDetections det;
+            dai::RawSpatialImgDetections det;
             mySpiApi.parse_metadata(&received_msg.raw_meta, det);
             for(const auto& det : det.detections){
-                printf("label: %d, xmin: %f, ymin: %f, xmax: %f, ymax: %f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax);
+                printf("label: %d, xmin: %.2f, ymin: %.2f, xmax: %.2f, ymax: %.2f, x: %.2f, y: %.2f, z: %.2f\n", det.label, det.xmin, det.ymin, det.xmax, det.ymax, det.spatialCoordinates.x, det.spatialCoordinates.y, det.spatialCoordinates.z);
             }
 
             // free up resources once you're done with the message.
-            // and pop the message from the queue
             mySpiApi.free_message(&received_msg);
-            mySpiApi.spi_pop_messages();
-        } else {
-            // Periodically check if new messages are available
-            usleep(1000);
         }
+
+        // ----------------------------------------
+        // pop current message/metadata. this tells the depthai to update the info being passed back using the spi_cmds.
+        // ----------------------------------------
+        req_success = mySpiApi.spi_pop_messages();
     }
 }
 
