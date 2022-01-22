@@ -1,2 +1,2 @@
 --extra-index-url https://artifacts.luxonis.com/artifactory/luxonis-python-snapshot-local/
-depthai==2.14.0.0+19989251b0270fcb29cea676b9e56a40c2bdfbd2
+depthai==2.14.0.0+1d0cf86346cf80a5cf272493ebf9eb8155c8fcb8

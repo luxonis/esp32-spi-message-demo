@@ -65,16 +65,15 @@ xout = pipeline.create(dai.node.XLinkOut)
 xout.setStreamName('end')
 script.outputs['end'].link(xout.input)
 
+# Shorthand for GPIO
+GPIO = dai.BoardConfig.GPIO
 # Create BoardConfig and enable UART3 on pins 34 and 35
 config = dai.Device.Config()
-txGpio = dai.BoardConfig.GPIO()
-rxGpio = dai.BoardConfig.GPIO()
-txGpio.mode = 5
-txGpio.output = True
-rxGpio.mode = 5
-rxGpio.output = False
-config.board.gpio[34] = txGpio
-config.board.gpio[35] = rxGpio
+# UART TX
+config.board.gpio[34] = GPIO(GPIO.OUTPUT, GPIO.ALT_MODE_5)
+# UART RX
+config.board.gpio[35] = GPIO(GPIO.INPUT, GPIO.ALT_MODE_5)
+# Enable UART3
 config.board.uart[3] = dai.BoardConfig.UART()
 
 # Connect to device with pipeline
