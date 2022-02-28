@@ -16,7 +16,7 @@ git submodule update --init --recursive
 git config submodule.recurse true
 ```
 
-Later submodules also need to be updated.
+Later submodules also need to be updated. To build an example, you will need to use [ESP-IDF](https://www.espressif.com/en/products/sdks/esp-idf)'s `idf.py`. **Examples here were only tested with ESP-IDF version 4.1** and we encourage you to use the same version as well.
 
 # SPI Protocol
 
