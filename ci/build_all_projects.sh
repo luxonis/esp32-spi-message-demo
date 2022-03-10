@@ -13,38 +13,14 @@ echo $ROOT_DIR
 
 ### Projects
 
-# image_part
-cd $ROOT_DIR/image_part
-idf.py build
+PROJECTS=(
+    gpio_interrupts image_part jpeg_demo jpeg_webserver_demo mjpeg_streaming_wifi
+    mobilenet_raw parse_meta people_tracker script_node_communication spatial_image_detections
+    spatial_location_calculator speed_benchmark spi_in_landmark spi_in_passthrough two_streams
+    uart_echo
+)
 
-# jpeg_demo
-cd $ROOT_DIR/jpeg_demo
-idf.py build
-
-# jpeg_webserver_demo
-cd $ROOT_DIR/jpeg_webserver_demo
-idf.py build
-
-# mobilenet_raw
-cd $ROOT_DIR/mobilenet_raw
-idf.py build
-
-# parse_meta
-cd $ROOT_DIR/parse_meta
-idf.py build
-
-# spi_in_landmark
-cd $ROOT_DIR/spi_in_landmark
-idf.py build
-
-# spi_in_passthrough
-cd $ROOT_DIR/spi_in_passthrough
-idf.py build
-
-# gpio_interrupts
-cd $ROOT_DIR/gpio_interrupts
-idf.py build
-
-# speed_benchmark
-cd $ROOT_DIR/speed_benchmark
-idf.py build
+for project in "${PROJECTS[@]}"; do
+    cd "$ROOT_DIR/$project"
+    idf.py build
+done
