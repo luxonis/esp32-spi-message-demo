@@ -1,2 +1,2 @@
-depthai==2.11.0.0
+depthai==2.15.0
 blobconverter>=1.2.2
