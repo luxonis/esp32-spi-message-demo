@@ -17,7 +17,7 @@ PROJECTS=(
     gpio_interrupts image_part jpeg_demo jpeg_webserver_demo mjpeg_streaming_wifi
     mobilenet_raw parse_meta people_tracker script_node_communication spatial_image_detections
     spatial_location_calculator speed_benchmark spi_in_landmark spi_in_passthrough two_streams
-    uart_echo
+    uart_echo ota_test
 )
 
 for project in "${PROJECTS[@]}"; do

@@ -26,11 +26,11 @@ FlashMT25Q::FlashMT25Q(){
 
     const esp_flash_spi_device_config_t device_config = {
         .host_id = VSPI_HOST,
-        .cs_id = 0,
         .cs_io_num = VSPI_IOMUX_PIN_NUM_CS,
         .io_mode = SPI_FLASH_DIO,
         .speed = ESP_FLASH_40MHZ,
-        .input_delay_ns = 0
+        .input_delay_ns = 0,
+        .cs_id = 0,
     };
 
     ESP_LOGI(TAG, "Initializing external SPI Flash");
@@ -56,8 +56,8 @@ FlashMT25Q::FlashMT25Q(){
     // Print out the ID and size
     uint32_t id;
     ESP_ERROR_CHECK(esp_flash_read_id(ext_flash, &id));
-    
-    // esp_flash_init doesn't calculate chip size for MT25QU01GBBB correctly so we'll manually set it here. 
+
+    // esp_flash_init doesn't calculate chip size for MT25QU01GBBB correctly so we'll manually set it here.
     if(id==0x20bb21){
         ext_flash->size = 1024*1024*1024;
     }
@@ -88,7 +88,7 @@ void FlashMT25Q::readTest(uint32_t readAddr, uint32_t readLen){
     ESP_ERROR_CHECK(esp_flash_read(ext_flash, readBuf, readAddr, readLen));
 
     int entriesPerLine = 8;
-    for(int i=0; i<readLen; i++){       
+    for(int i=0; i<readLen; i++){
         printf("%02hhX\t", readBuf[i]);
         if((i+1)%entriesPerLine==0){
             printf("\n");
