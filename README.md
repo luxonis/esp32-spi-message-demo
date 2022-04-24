@@ -6,6 +6,18 @@ See below for this running on the [BW1092](https://shop.luxonis.com/collections/
 
 And see https://github.com/luxonis/depthai-experiments/tree/master/gen2-spi for pulling off JPEG and/or depth (including cropping on DepthAI) instead of the MobileNetv2-SSD or tinyYOLOv3 metadata shown below.
 
+## Building
+
+The first time you build, the repository submodules need be initialized:
+```
+git submodule update --init --recursive
+
+# Tip: You can ask Git to do that automatically:
+git config submodule.recurse true
+```
+
+Later submodules also need to be updated. To build an example, you will need to use [ESP-IDF](https://www.espressif.com/en/products/sdks/esp-idf)'s `idf.py`. **Examples here were only tested with ESP-IDF version 4.1** and we encourage you to use the same version as well.
+
 # SPI Protocol
 
 SPI messaging is currently arranged in 2 layers. The first is the spi protocol. The spi protocol is the lowest level. It defines a standard packet for all SPI communication. It is a 256 byte packet arranged in the following manner:

@@ -66,6 +66,8 @@ void run_demo(){
         // pop current message/metadata. this tells the depthai to update the info being passed back using the spi_cmds.
         // ----------------------------------------
         req_success = mySpiApi.spi_pop_messages();
+
+        usleep(30000);
     }
 }
 
