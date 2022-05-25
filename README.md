@@ -1,3 +1,6 @@
+
+**NOTE!** OAK IoT series and this repository is **community supported only**, and is **provided as-is**. We most likely **won't update it** and **we don't provide support** for it (Discord, forums, email...).
+
 # Demo
 
 See below for this running on the [BW1092](https://shop.luxonis.com/collections/all/products/bw1092):
