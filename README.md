@@ -1,5 +1,7 @@
 
-**NOTE!** OAK IoT series and this repository is **community supported only**, and is **provided as-is**. We most likely **won't update it** and **we don't provide support** for it (Discord, forums, email...).
+## NOTE!
+
+OAK IoT series and this repository is **community supported only**, and is **provided as-is**. We most likely **won't update it** and **we don't provide support** for it (Discord, forums, email...).
 
 # Demo
 
