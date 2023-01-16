@@ -44,7 +44,3 @@ On top of this we have a layer called SPI messaging. This code defines the follo
 * A way to encapsulate commands going to the MyriadX over SPI.
 * A way to receive and parse command responses. 
 * We’ll go into greater depth as to how exactly to use this in the SPI Messaging Example.
-
-# The SPI Messaging Examples
-We have a few SPI messaging examples in the depthai-experiments repository. Please see the following:
-https://github.com/luxonis/depthai-experiments/tree/master/gen2-spi
