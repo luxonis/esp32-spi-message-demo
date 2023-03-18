@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<h2>Upload bootloader or pipeline to ESP32</h2>
+	<label for="file">Upload a file</label>
+	<input id="file" type="file" accept=".bin,.dap" style="width:100%;">
+	<button id="uploadButton" onclick="upload()">Upload file</button>
+</body>
+</html>
+<script>
+
+// Max size of an individual file. Make sure this
+// value is same as that set in file_server.c
+const MAX_FILE_SIZE = 1000 * 1024;
+const MAX_FILE_SIZE_STR = "1000KB";
+
+function upload() {
+	let file = getFile();
+	let path = getPath(file);
+	if (!file || !path) return;
+
+	document.getElementById("file").disabled = true;
+	document.getElementById("uploadButton").disabled = true;
+
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function () {
+		if (xhttp.readyState == 4) {
+			if (xhttp.status == 200) {
+				document.open();
+				document.write(xhttp.responseText);
+				document.close();
+			} else if (xhttp.status == 0) {
+				alert("Server closed the connection abruptly!");
+				location.reload()
+			} else {
+				alert(xhttp.status + " Error!\n" + xhttp.responseText);
+				location.reload()
+			}
+		}
+	};
+	xhttp.open("POST", path, true);
+	xhttp.send(file);
+}
+
+function getFile() {
+	let inputFile = document.getElementById("file").files;
+	if (inputFile.length == 0) {
+		alert("No file selected!");
+	} else if (MAX_FILE_SIZE < inputFile[0].size) {
+		alert(`File size must be less than ${MAX_FILE_SIZE_STR}!`);
+	} else {
+		return inputFile[0];
+	}
+}
+
+function getPath(file) {
+	if (file.name.toLowerCase().endsWith('.dap')) {
+		return window.location.href + 'upload_dap';
+	}
+	else if (file.name.toLowerCase().endsWith('.bin')) {
+		return window.location.href + 'upload_bl';
+	}
+	else {
+		alert('Selected file name doesn\'t end with .dap or .bin!');
+	}
+}
+</script>
